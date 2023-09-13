@@ -1,0 +1,33 @@
+Package: ParquetDataFrame
+Version: 0.1.0
+Date: 2023-09-12
+Title: Bioconductor-friendly Bindings for Parquet
+Description: 
+    Implements bindings for Parquet files that are compatible with Bioconductor
+    S4 data structures, namely the DataFrame and DelayedArray. This allows 
+    Parquet-derived data to be easily used inside other Bioconductor objects
+    (e.g., SummarizedExperiments) while keeping everything on disk.
+Authors@R:
+    c(
+        person("Aaron", "Lun", role=c("aut", "cre"), email="infinite.monkeys.with.keyboards@gmail.com"),
+        person("Genentech, Inc.", role="cph")
+    )
+License: MIT + file LICENSE
+Depends:
+    DelayedArray,
+    S4Vectors
+Imports: 
+    arrow,
+    dplyr,
+    methods
+Suggests:
+    knitr,
+    rmarkdown,
+    BiocStyle,
+    testthat
+biocViews: DataRepresentation, Infrastructure, Software
+VignetteBuilder: knitr
+BugReports: https://github.com/LTLA/ParquetDataFrame
+URL: https://github.com/LTLA/ParquetDataFrame
+RoxygenNote: 7.2.3
+Encoding: UTF-8
