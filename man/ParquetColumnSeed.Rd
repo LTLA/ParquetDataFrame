@@ -7,6 +7,7 @@
 \alias{type,ParquetColumnSeed-method}
 \alias{extract_array,ParquetColumnSeed-method}
 \alias{ParquetColumnVector-class}
+\alias{DelayedArray,ParquetColumnSeed-method}
 \alias{ParquetColumnVector}
 \title{Delayed column of a Parquet file}
 \usage{

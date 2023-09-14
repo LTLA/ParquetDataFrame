@@ -43,6 +43,7 @@
 #' type,ParquetColumnSeed-method
 #' extract_array,ParquetColumnSeed-method
 #' ParquetColumnVector-class
+#' DelayedArray,ParquetColumnSeed-method
 #'
 #' @name ParquetColumnSeed
 NULL
@@ -83,22 +84,7 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
             modified <- TRUE
         }
 
-        # Find runs of consecutive elements, and batching them together to do
-        # efficient extractions from the Parquet file.
-        delta <- diff(slice)
-        offenders <- which(delta != 1L)
-        starts.i <- c(1L, offenders + 1L)
-        ends.i <- c(offenders, length(slice))
-
-        contents <- vector("list", length(starts.i))
-        for (i in seq_along(starts.i)) {
-            start <- slice[starts.i[i]]
-            end <- slice[ends.i[i]]
-            sliced <- slice_tail(slice_head(tab, n=end), n=end - start + 1L)
-            contents[[i]] <- collect(sliced)[[x@column]]
-        }
-
-        output <- do.call(c, contents)
+        output <- tab[[x@column]]$Take(slice - 1L)$as_vector()
         if (modified) {
             m <- match(original, slice)
             output <- output[m]
@@ -113,12 +99,14 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 
 #' @export
 #' @rdname ParquetColumnSeed
+#' @importFrom DelayedArray type
+#' @importFrom arrow read_parquet
 ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
     if (is.null(type) || is.null(length)) {
         tab <- read_parquet(path, col_select=column, as_data_frame=FALSE)
         col <- tab[[column]]
         if (is.null(type)){ 
-            type <- col$type$ToString()
+            type <- DelayedArray::type(col$Slice(0,0)$as_vector())
         }
         if (is.null(length)) {
             length <- nrow(tab)
@@ -131,10 +119,17 @@ ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
 setClass("ParquetColumnVector", contains="DelayedArray", slots=c(seed="ParquetColumnSeed"))
 
 #' @export
+setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVector(seed))
+
+#' @export
 #' @rdname ParquetColumnSeed
 ParquetColumnVector <- function(x, ...) {
     if (!is(x, "ParquetColumnSeed")) {
         x <- ParquetColumnSeed(x, ...)
     }
-    DelayedArray(x)
+    new("ParquetColumnVector", seed=x)
 }
+
+
+
+
