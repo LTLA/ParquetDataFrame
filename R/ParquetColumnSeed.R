@@ -60,10 +60,8 @@ setMethod("dim", "ParquetColumnSeed", function(x) x@length)
 setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
 #' @export
-#' @importFrom arrow read_parquet
-#' @importFrom dplyr collect slice_head slice_tail
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
-    tab <- read_parquet(x@path, col_select=x@column, as_data_frame=FALSE)
+    tab <- .acquire_cached_handle(x@path, x@column)
     slice <- index[[1]]
 
     if (is.null(slice)) {
@@ -100,10 +98,9 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 #' @export
 #' @rdname ParquetColumnSeed
 #' @importFrom DelayedArray type
-#' @importFrom arrow read_parquet
 ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
     if (is.null(type) || is.null(length)) {
-        tab <- read_parquet(path, col_select=column, as_data_frame=FALSE)
+        tab <- .acquire_cached_handle(path, column)
         col <- tab[[column]]
         if (is.null(type)){ 
             type <- DelayedArray::type(col$Slice(0,0)$as_vector())
@@ -130,6 +127,42 @@ ParquetColumnVector <- function(x, ...) {
     new("ParquetColumnVector", seed=x)
 }
 
+persistent <- new.env()
+persistent$handles <- list()
 
+#' @importFrom arrow read_parquet
+.acquire_cached_handle <- function(path, column) {
+    # Here we set up an LRU cache for the Parquet handles with a path+column
+    # key. This avoids the initialization time when querying lots of columns.
+    key <- paste0(path, "#", column)
+    nhandles <- length(persistent$handles)
 
+    candidates <- which(names(persistent$handles) == key)
+    if (length(candidates)) {
+        # We need to scan for exact identity, just in case the key isn't unique,
+        # which is possible if the path or column contains a '#'.
+        for (i in rev(candidates)) { # check the more recently used elements first.
+            candidate <- persistent$handles[[i]]
+            if (candidate$path == path || candidate$path == column) {
+                output <- candidate$handle
+                persistent$handles <- persistent$handles[c(seq_len(i-1L), seq(i+1L, nhandles), i)] # moving to the back
+                return(output)
+            }
+        }
+    }
 
+    # Pulled this value out of my ass.
+    limit <- 100
+    if (nhandles >= limit) {
+        persistent$handles <- tail(persistent$handles, limit - 1L)
+    }
+
+    output <- read_parquet(path, col_select=column, as_data_frame=FALSE)
+    persistent$handles[[key]] <- list(
+        handle = output,
+        path = path,
+        column = column
+    )
+
+    output
+}
