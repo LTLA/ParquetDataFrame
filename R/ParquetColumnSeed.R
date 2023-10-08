@@ -1,6 +1,6 @@
-#' Delayed column of a Parquet file
+#' Column of a Parquet file
 #'
-#' Represent a column of a Parquet file as a 1-dimensional DelayedArray.
+#' Represent a column of a Parquet file as a 1-dimensional \linkS4class{DelayedArray}.
 #' This allows us to use Parquet data inside \linkS4class{DataFrame}s without loading them into memory.
 #'
 #' @param path String containing a path to a Parquet file.
@@ -61,11 +61,11 @@ setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
 #' @export
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
-    tab <- .acquire_cached_handle(x@path, x@column)
+    tab <- .acquire_cached_handle(x@path)
     slice <- index[[1]]
 
     if (is.null(slice)) {
-        output <- collect(tab)[[x@column]]
+        output <- tab[[x@column]]$as_vector()
     } else if (length(slice) == 0) {
         output <- logical()
     } else {
@@ -100,7 +100,7 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 #' @importFrom DelayedArray type
 ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
     if (is.null(type) || is.null(length)) {
-        tab <- .acquire_cached_handle(path, column)
+        tab <- .acquire_cached_handle(path)
         col <- tab[[column]]
         if (is.null(type)){ 
             type <- DelayedArray::type(col$Slice(0,0)$as_vector())
@@ -131,24 +131,18 @@ persistent <- new.env()
 persistent$handles <- list()
 
 #' @importFrom arrow read_parquet
-.acquire_cached_handle <- function(path, column) {
-    # Here we set up an LRU cache for the Parquet handles with a path+column
-    # key. This avoids the initialization time when querying lots of columns.
-    key <- paste0(path, "#", column)
+.acquire_cached_handle <- function(path) {
+    # Here we set up an LRU cache for the Parquet handles. 
+    # This avoids the initialization time when querying lots of columns.
     nhandles <- length(persistent$handles)
 
-    candidates <- which(names(persistent$handles) == key)
-    if (length(candidates)) {
-        # We need to scan for exact identity, just in case the key isn't unique,
-        # which is possible if the path or column contains a '#'.
-        for (i in rev(candidates)) { # check the more recently used elements first.
-            candidate <- persistent$handles[[i]]
-            if (candidate$path == path || candidate$path == column) {
-                output <- candidate$handle
-                persistent$handles <- persistent$handles[c(seq_len(i-1L), seq(i+1L, nhandles), i)] # moving to the back
-                return(output)
-            }
+    i <- which(names(persistent$handles) == path)
+    if (length(i)) {
+        output <- persistent$handles[[i]]
+        if (i < nhandles) {
+            persistent$handles <- persistent$handles[c(seq_len(i-1L), seq(i+1L, nhandles), i)] # moving to the back
         }
+        return(output)
     }
 
     # Pulled this value out of my ass.
@@ -157,12 +151,7 @@ persistent$handles <- list()
         persistent$handles <- tail(persistent$handles, limit - 1L)
     }
 
-    output <- read_parquet(path, col_select=column, as_data_frame=FALSE)
-    persistent$handles[[key]] <- list(
-        handle = output,
-        path = path,
-        column = column
-    )
-
+    output <- read_parquet(path, as_data_frame=FALSE)
+    persistent$handles[[path]] <- output
     output
 }

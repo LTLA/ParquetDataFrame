@@ -9,7 +9,7 @@
 \alias{ParquetColumnVector-class}
 \alias{DelayedArray,ParquetColumnSeed-method}
 \alias{ParquetColumnVector}
-\title{Delayed column of a Parquet file}
+\title{Column of a Parquet file}
 \usage{
 ParquetColumnSeed(path, column, type = NULL, length = NULL)
 
@@ -39,7 +39,7 @@ For \code{ParquetColumnSeed}, a ParquetColumnSeed is returned, obviously.
 For \code{ParquetColumnVector}, a ParquetColumnVector is returned.
 }
 \description{
-Represent a column of a Parquet file as a 1-dimensional DelayedArray.
+Represent a column of a Parquet file as a 1-dimensional \linkS4class{DelayedArray}.
 This allows us to use Parquet data inside \linkS4class{DataFrame}s without loading them into memory.
 }
 \examples{
