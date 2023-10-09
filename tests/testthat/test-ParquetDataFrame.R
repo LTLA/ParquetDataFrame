@@ -99,6 +99,11 @@ test_that("subset assignment usually collapses to an ordinary DFrame", {
     expect_identical(as.data.frame(copy), ref)
 
     copy <- x
+    copy[,"foobar"] <- runif(nrow(x))
+    expect_s4_class(copy, "DFrame")
+    expect_identical(colnames(copy), c(colnames(x), "foobar"))
+
+    copy <- x
     copy[[1]] <- copy[[3]]
     expect_s4_class(copy, "DFrame")
     expect_s4_class(copy[[1]], "ParquetColumnVector")
@@ -106,6 +111,11 @@ test_that("subset assignment usually collapses to an ordinary DFrame", {
     ref[[1]] <- ref[[3]]
     rownames(ref) <- NULL
     expect_identical(as.data.frame(copy), ref)
+
+    copy <- x
+    copy$some_random_thing <- runif(nrow(x))
+    expect_s4_class(copy, "DFrame")
+    expect_identical(colnames(copy), c(colnames(x), "some_random_thing"))
 })
 
 test_that("no-op subset assignment returns a ParquetDataFrame", {

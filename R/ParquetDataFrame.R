@@ -175,8 +175,8 @@ setMethod("normalizeSingleBracketReplacementValue", "ParquetDataFrame", function
 #' @importFrom S4Vectors replaceCOLS normalizeSingleBracketSubscript
 setMethod("replaceCOLS", "ParquetDataFrame", function(x, i, value) {
     xstub <- setNames(seq_along(x), names(x))
-    i2 <- normalizeSingleBracketSubscript(i, xstub)
-    if (length(i2) == 1L) {
+    i2 <- normalizeSingleBracketSubscript(i, xstub, allow.NAs=TRUE)
+    if (length(i2) == 1L && !is.na(i2)) {
         if (is(value, "ParquetDataFrame")) {
             if (x@path == value@path && identical(x@columns[i2], value@columns)) {
                 return(x)
@@ -194,8 +194,8 @@ setMethod("replaceCOLS", "ParquetDataFrame", function(x, i, value) {
 #' @export
 #' @importFrom S4Vectors normalizeDoubleBracketSubscript
 setMethod("[[<-", "ParquetDataFrame", function(x, i, j, ..., value) {
-    i2 <- normalizeDoubleBracketSubscript(i, x)
-    if (length(i2) == 1L) {
+    i2 <- normalizeDoubleBracketSubscript(i, x, allow.nomatch=TRUE)
+    if (length(i2) == 1L && !is.na(i2)) {
         if (is(value, "ParquetColumnVector")) {
             if (x@path == value@seed@path && x@columns[i2] == value@seed@column) {
                 return(x)
