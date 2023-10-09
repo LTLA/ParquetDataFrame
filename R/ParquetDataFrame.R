@@ -212,23 +212,28 @@ cbind.ParquetDataFrame <- function(..., deparse.level=1) {
     preserved <- TRUE
     all_columns <- character(0)
     objects <- list(...)
+    xpath <- NULL
 
     for (i in seq_along(objects)) {
         obj <- objects[[i]]
         if (is(obj, "ParquetDataFrame")) {
-            if (obj@path != x@path) {
+            if (is.null(xpath)) {
+                xpath <- obj@path
+            } else if (obj@path != xpath) {
                 preserved <- FALSE
                 break
-            } else {
-                all_columns <- c(all_columns, obj@columns)
-            }
+            } 
+            all_columns <- c(all_columns, obj@columns)
+
         } else if (is(obj, "ParquetColumnVector")) {
-            if (obj@seed@path != x@path || !identical(names(objects)[i], obj@seed@column)) {
+            if (is.null(xpath)) {
+                xpath <- obj@seed@path
+            } else if (obj@seed@path != xpath || !identical(names(objects)[i], obj@seed@column)) {
                 preserved <- FALSE
                 break
-            } else {
-                all_columns <- c(all_columns, obj@seed@column)
-            }
+            } 
+            all_columns <- c(all_columns, obj@seed@column)
+
         } else {
             preserved <- FALSE
             break
@@ -246,7 +251,9 @@ cbind.ParquetDataFrame <- function(..., deparse.level=1) {
 
     } else {
         all_mcols <- list()
+        has_mcols <- FALSE
         all_metadata <- list()
+
         for (i in seq_along(objects)) {
             obj <- objects[[i]]
 
@@ -255,19 +262,32 @@ cbind.ParquetDataFrame <- function(..., deparse.level=1) {
             if (is(obj, "DataFrame")) {
                 mc <- mcols(obj, use.names=FALSE)
                 md <- metadata(obj)
+                if (is.null(mc)) {
+                    mc <- make_zero_col_DFrame(length(obj))
+                } else {
+                    has_mcols <- TRUE
+                }
+            } else {
+                mc <- make_zero_col_DFrame(1)
             }
 
-            if (is.null(mc)) {
-                mc <- make_zero_col_DFrame(length(obj))
-            }
             all_mcols[[i]] <- mc
             all_metadata[[i]] <- md
         }
 
-        x@columns <- all_columns
-        x@elementMetadata <- do.call(combineRows, all_mcols)
-        x@metadata <- do.call(c, all_metadata)
-        x
+        if (has_mcols) {
+            all_mcols <- do.call(combineRows, all_mcols)
+        } else {
+            all_mcols <- NULL
+        }
+
+        new("ParquetDataFrame", 
+            path=xpath,
+            columns=all_columns,
+            nrows=NROW(objects[[1]]),
+            elementMetadata=all_mcols,
+            metadata=do.call(c, all_metadata)
+        )
     }
 }
 
