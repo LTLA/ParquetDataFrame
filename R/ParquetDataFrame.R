@@ -273,7 +273,15 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 #' @export
 setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, optional = FALSE, ...) {
     tab <- acquireHandle(x@path)
-    as.data.frame(tab, row.names=row.names, optional=optional, ...)
+
+    ucol <- unique(x@columns)
+    is.same <- identical(x@columns, ucol)
+    tab <- tab[,ucol]
+
+    output <- as.data.frame(tab, row.names=row.names, optional=optional, ...)
+    output <- output[,match(x@columns,colnames(output)),drop=FALSE]
+
+    output
 })
 
 #' @export

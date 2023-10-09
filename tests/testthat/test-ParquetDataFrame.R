@@ -33,6 +33,9 @@ test_that("slicing by columns preserves type of a ParquetDataFrame", {
     expect_s4_class(copy, "ParquetDataFrame")
     expect_identical(colnames(copy), colnames(example_df)[1:2])
     expect_identical(ncol(copy), 2L)
+    unnamed <- example_df[,1:2]
+    rownames(unnamed) <- NULL
+    expect_identical(as.data.frame(copy), unnamed)
 
     cn <- colnames(x)[c(4,2,3)]
     copy <- x[,cn]
@@ -187,3 +190,10 @@ test_that("cbinding carries forward any metadata", {
     expect_identical(metadata(copy), list(a="YAY", a="whee"))
 })
 
+test_that("as.data.frame works with duplicated columns", {
+    duplicates <- c(1,1,2,2,3,4,3,5)
+    copy <- x[,duplicates]
+    unnamed <- example_df[,duplicates]
+    rownames(unnamed) <- NULL
+    expect_identical(as.data.frame(copy), unnamed)
+})
