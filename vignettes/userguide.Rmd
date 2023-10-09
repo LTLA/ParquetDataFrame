@@ -1,0 +1,115 @@
+---
+title: Using Parquet-backed DataFrames
+author:
+- name: Aaron Lun
+  email: infinite.monkeys.with.keyboards@gmail.com
+package: ParquetDataFrame
+date: "Revised: October 9, 2023"
+output:
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{User guide}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r, echo=FALSE}
+library(BiocStyle)
+self <- Biocpkg("ParquetDataFrame");
+knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
+```
+
+# Overview
+
+The `ParquetDataFrame`, as its name suggests, is a `DataFrame` where the columns are derived from data in a Parquet file.
+This is fully file-backed so no data is actually loaded into memory until requested, allowing users to represent large datasets in limited memory.
+As the `ParquetDataFrame` inherits from `r Biocpkg("S4Vectors")`' `DataFrame`, it can be used anywhere in Bioconductor's ecosystem that accepts a `DataFrame`, 
+e.g., as the column data of a `SummarizedExperiment`, or inside a `BumpyDataFrameMatrix` from the `r Biocpkg("BumpyMatrix")` package.
+
+# Basic usage
+
+Given a path to a Parquet file, we can just supply the path to the `ParquetDataFrame` constructor:
+
+```{r}
+# Mocking up a file.
+tf <- tempfile()
+arrow::write_parquet(mtcars, tf)
+
+# Creating the ParquetDataFrame.
+library(ParquetDataFrame)
+df <- ParquetDataFrame(tf)
+df
+```
+
+These support all the usual methods for a `DataFrame`, except that the data is kept on file and referenced as needed:
+
+```{r}
+nrow(df)
+colnames(df)
+class(as.data.frame(df))
+```
+
+We extract individual columns as `ParquetColumnVector` objects.
+These are 1-dimensional file-backed `DelayedArray`s that pull a single column's data from the Parquet file on demand.
+
+```{r}
+df$mpg
+
+# These can participate in usual vector operations:
+df$mpg * 10
+log1p(df$mpg)
+
+# Realize this into an ordinary vector.
+as.vector(df$mpg)
+```
+
+# Collapsing to a `DFrame`
+
+The main goal of a `ParquetDataFrame` is to serve as a consistent representation of the data inside a Parquet file.
+However, this cannot be easily reconciled with many `DataFrame` operations that add or change data - 
+at least, not without mutating the Parquet file, which is outside the scope of the `ParquetDataFrame` class.
+To handle such operations, the `ParquetDataFrame` will collapse to a `DFrame` of `ParquetColumnVector`s:
+
+```{r}
+copy <- df
+copy$some_random_thing <- runif(nrow(df))
+class(copy)
+colnames(copy)
+```
+
+This preserves the memory efficiency of file-backed data while supporting all `DataFrame` operations.
+For example, we can easily subset and mutate the various columns, which manifest as delayed operations inside each column.
+
+```{r}
+copy$wt <- copy$wt * 1000
+top.hits <- head(copy)
+top.hits
+```
+
+The fallback to `DFrame` ensures that a `ParquetDataFrame` is interoperable with other Bioconductor data structures that need to perform arbitrary `DataFrame` operations.
+Of course, when a collapse occurs, we lose all guarantees that the in-memory representation is compatible with the underlying Parquet file.
+This may preclude further optimizations in cases where we consider directly operating on the file. 
+
+# Retrieving the Arrow Table
+
+At any point, users can retrieve a handle to the underlying Parquet file via the `acquireTable()` function.
+This can be used with methods in the `r CRANpkg("arrow")` package to push more complex operations to the C++ libraries for greater efficiency.
+
+```{r}
+handle <- acquireTable(path(df))
+handle
+```
+
+Note that the acquired handle will not capture any delayed subsetting/mutation operations that have been applied in the R session.
+In theory, it is possible to convert a subset of `r Biocpkg("DelayedArray")` operations into their `r CRANpkg("arrow")` equivalents,
+which would improve performance by avoiding the R interpreter when executing a query on the file.
+In practice, any performance boost tends to be rather fragile as only a subset of operations are supported,
+meaning that it is easy to silently fall back to R-based evaluation when an unsupported operation is executed.
+Users wanting to optimize query performance should just operate on the handle directly.
+
+# Session information {-}
+
+```{r}
+sessionInfo()
+```
