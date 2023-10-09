@@ -35,17 +35,20 @@ If \code{NULL}, this is determined from \code{path}.}
 If \code{NULL}, this is determined from \code{path}.}
 }
 \value{
-A ParquetDataFrame.
+A ParquetDataFrame where each column is a \linkS4class{ParquetColumnVector}.
 }
 \description{
 Create a Parquet-backed \linkS4class{DataFrame}, where the data are kept on disk until requested.
 }
 \details{
-The ParquetDataFrame is equivalent to a \linkS4class{DataFrame} of \linkS4class{ParquetColumnVector} objects,
-and is useful for indicating that the in-memory representation is consistent with the underlying Parquet file.
-Operations on a ParquetDataFrame may return another ParquetDataFrame if the operation does not add any information that is inconsistent with the file contents,
-e.g., slicing by column will return a ParquetDataFrame as the contents of each column are unchanged.
-Other operations will cause the ParquetDataFrame to collapse to a regular \linkS4class{DFrame} of \linkS4class{ParquetColumnVector} objects;
+The ParquetDataFrame is essentially just a \linkS4class{DataFrame} of \linkS4class{ParquetColumnVector} objects.
+It is primarily useful for indicating that the in-memory representation is consistent with the underlying Parquet file
+(e.g., no delayed filter/mutate operations have been applied, no data has been added from other files).
+Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet file.
+
+In that vein, operations on a ParquetDataFrame may return another ParquetDataFrame if the operation does not introduce inconsistencies with the file-backed data.
+For example, slicing or combining by column will return a ParquetDataFrame as the contents of the retained columns are unchanged.
+In other cases, the ParquetDataFrame will collapse to a regular \linkS4class{DFrame} of \linkS4class{ParquetColumnVector} objects before applying the operation;
 these are still file-backed but lack the guarantee of file consistency.
 }
 \examples{
@@ -54,8 +57,20 @@ tf <- tempfile()
 on.exit(unlink(tf))
 arrow::write_parquet(mtcars, tf)
 
-# Creating the data frame:
-ParquetDataFrame(tf)
+# Creating our Parquet-backed data frame:
+df <- ParquetDataFrame(tf)
+df
+
+# Extraction yields a ParquetColumnVector:
+df$carb
+
+# Some operations preserve the ParquetDataFrame:
+df[,1:5]
+cbind(df, df)
+
+# ... but most operations collapse to a regular DFrame:
+df[1:5,]
+cbind(df, some_new_name=df[,1])
 
 }
 \author{
