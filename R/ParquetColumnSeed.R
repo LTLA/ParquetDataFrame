@@ -41,6 +41,7 @@
 #' ParquetColumnSeed-class
 #' dim,ParquetColumnSeed-method
 #' type,ParquetColumnSeed-method
+#' path,ParquetColumnSeed-method
 #' extract_array,ParquetColumnSeed-method
 #' ParquetColumnVector-class
 #' DelayedArray,ParquetColumnSeed-method
@@ -58,6 +59,10 @@ setMethod("dim", "ParquetColumnSeed", function(x) x@length)
 #' @export
 #' @importFrom DelayedArray type
 setMethod("type", "ParquetColumnSeed", function(x) x@type)
+
+#' @export
+#' @importFrom BiocGenerics path
+setMethod("path", "ParquetColumnSeed", function(object) object@path)
 
 #' @export
 #' @importFrom DelayedArray extract_array

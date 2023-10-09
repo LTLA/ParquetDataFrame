@@ -51,6 +51,7 @@
 #' nrow,ParquetDataFrame-method
 #' ncol,ParquetDataFrame-method
 #' length,ParquetDataFrame-method
+#' path,ParquetDataFrame-method
 #'
 #' rownames,ParquetDataFrame-method
 #' names,ParquetDataFrame-method
@@ -94,6 +95,9 @@ setMethod("nrow", "ParquetDataFrame", function(x) x@nrows)
 
 #' @export
 setMethod("length", "ParquetDataFrame", function(x) length(x@columns))
+
+#' @export
+setMethod("path", "ParquetDataFrame", function(object) object@path)
 
 #' @export
 setMethod("rownames", "ParquetDataFrame", function(x) NULL)
