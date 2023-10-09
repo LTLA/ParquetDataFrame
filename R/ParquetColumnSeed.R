@@ -61,7 +61,7 @@ setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
 #' @export
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
-    tab <- .acquire_cached_handle(x@path)
+    tab <- acquireHandle(x@path)
     slice <- index[[1]]
 
     if (is.null(slice)) {
@@ -100,7 +100,7 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 #' @importFrom DelayedArray type
 ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
     if (is.null(type) || is.null(length)) {
-        tab <- .acquire_cached_handle(path)
+        tab <- acquireHandle(path)
         col <- tab[[column]]
         if (is.null(type)){ 
             type <- DelayedArray::type(col$Slice(0,0)$as_vector())
@@ -125,33 +125,4 @@ ParquetColumnVector <- function(x, ...) {
         x <- ParquetColumnSeed(x, ...)
     }
     new("ParquetColumnVector", seed=x)
-}
-
-persistent <- new.env()
-persistent$handles <- list()
-
-#' @importFrom arrow read_parquet
-.acquire_cached_handle <- function(path) {
-    # Here we set up an LRU cache for the Parquet handles. 
-    # This avoids the initialization time when querying lots of columns.
-    nhandles <- length(persistent$handles)
-
-    i <- which(names(persistent$handles) == path)
-    if (length(i)) {
-        output <- persistent$handles[[i]]
-        if (i < nhandles) {
-            persistent$handles <- persistent$handles[c(seq_len(i-1L), seq(i+1L, nhandles), i)] # moving to the back
-        }
-        return(output)
-    }
-
-    # Pulled this value out of my ass.
-    limit <- 100
-    if (nhandles >= limit) {
-        persistent$handles <- tail(persistent$handles, limit - 1L)
-    }
-
-    output <- read_parquet(path, as_data_frame=FALSE)
-    persistent$handles[[path]] <- output
-    output
 }

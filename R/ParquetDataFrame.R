@@ -58,7 +58,7 @@
 #' @export
 ParquetDataFrame <- function(path, columns=NULL, nrows=NULL) {
     if (is.null(columns) || is.null(nrows)) {
-        tab <- .acquire_cached_handle(path)
+        tab <- acquireHandle(path)
         if (is.null(columns)) {
             columns <- colnames(tab)
         }
@@ -272,7 +272,7 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 
 #' @export
 setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, optional = FALSE, ...) {
-    tab <- .acquire_cached_handle(x@path)
+    tab <- acquireHandle(x@path)
     as.data.frame(tab, row.names=row.names, optional=optional, ...)
 })
 
