@@ -26,6 +26,15 @@ test_that("renaming collapses to an ordinary DFrame", {
     rownames(copy) <- replacements
     expect_s4_class(copy, "DFrame")
     expect_identical(rownames(copy), replacements)
+
+    # Unless the new names are the same as the old names.
+    copy <- x
+    rownames(copy) <- NULL
+    expect_s4_class(copy, "ParquetDataFrame")
+
+    copy <- x
+    colnames(copy) <- colnames(x)
+    expect_s4_class(copy, "ParquetDataFrame")
 })
 
 test_that("slicing by columns preserves type of a ParquetDataFrame", {

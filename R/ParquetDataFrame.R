@@ -107,15 +107,19 @@ setMethod("names", "ParquetDataFrame", function(x) x@columns)
 
 #' @export
 setReplaceMethod("rownames", "ParquetDataFrame", function(x, value) {
-    x <- .collapse_to_df(x)
-    rownames(x) <- value
+    if (!is.null(value)) {
+        x <- .collapse_to_df(x)
+        rownames(x) <- value
+    }
     x
 })
 
 #' @export
 setReplaceMethod("names", "ParquetDataFrame", function(x, value) {
-    x <- .collapse_to_df(x)
-    names(x) <- value
+    if (!identical(value, names(x))) {
+        x <- .collapse_to_df(x)
+        names(x) <- value
+    }
     x
 })
 
