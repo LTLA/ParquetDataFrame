@@ -67,7 +67,7 @@ setMethod("path", "ParquetColumnSeed", function(object) object@path)
 #' @export
 #' @importFrom DelayedArray extract_array
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
-    tab <- acquireHandle(x@path)
+    tab <- acquireTable(x@path)
     slice <- index[[1]]
 
     if (is.null(slice)) {
@@ -106,7 +106,7 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 #' @importFrom DelayedArray type
 ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
     if (is.null(type) || is.null(length)) {
-        tab <- acquireHandle(path)
+        tab <- acquireTable(path)
         col <- tab[[column]]
         if (is.null(type)){ 
             type <- DelayedArray::type(col$Slice(0,0)$as_vector())
