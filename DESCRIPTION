@@ -17,8 +17,10 @@ Depends:
     DelayedArray,
     S4Vectors
 Imports: 
-    arrow,
-    methods
+    stats,
+    utils,
+    methods,
+    arrow
 Suggests:
     knitr,
     rmarkdown,

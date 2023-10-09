@@ -60,6 +60,7 @@ setMethod("dim", "ParquetColumnSeed", function(x) x@length)
 setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
 #' @export
+#' @importFrom DelayedArray extract_array
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
     tab <- acquireHandle(x@path)
     slice <- index[[1]]
@@ -116,6 +117,7 @@ ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
 setClass("ParquetColumnVector", contains="DelayedArray", slots=c(seed="ParquetColumnSeed"))
 
 #' @export
+#' @importFrom DelayedArray DelayedArray
 setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVector(seed))
 
 #' @export

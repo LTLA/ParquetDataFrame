@@ -57,7 +57,7 @@
 #' rownames<-,ParquetDataFrame-method
 #' names<-,ParquetDataFrame-method
 #'
-#' extractROWS,ParquetDataFrame-method
+#' extractROWS,ParquetDataFrame,ANY-method
 #' extractCOLS,ParquetDataFrame-method
 #' [[,ParquetDataFrame-method
 #'
@@ -127,6 +127,7 @@ setMethod("extractROWS", "ParquetDataFrame", function(x, i) {
 })
 
 #' @export
+#' @importFrom stats setNames
 #' @importFrom S4Vectors extractCOLS normalizeSingleBracketSubscript
 setMethod("extractCOLS", "ParquetDataFrame", function(x, i) {
     if (!missing(i)) {
@@ -170,7 +171,8 @@ setMethod("normalizeSingleBracketReplacementValue", "ParquetDataFrame", function
 })
 
 #' @export
-#' @importFrom S4Vectors replaceROWS normalizeSingleBracketSubscript
+#' @importFrom stats setNames
+#' @importFrom S4Vectors replaceCOLS normalizeSingleBracketSubscript
 setMethod("replaceCOLS", "ParquetDataFrame", function(x, i, value) {
     xstub <- setNames(seq_along(x), names(x))
     i2 <- normalizeSingleBracketSubscript(i, xstub)

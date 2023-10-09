@@ -31,6 +31,7 @@ persistent$handles <- list()
 #' releaseHandle(tf) # clears the cache
 #' @export
 #' @importFrom arrow read_parquet
+#' @importFrom utils tail
 acquireHandle <- function(path) {
     # Here we set up an LRU cache for the Parquet handles. 
     # This avoids the initialization time when querying lots of columns.

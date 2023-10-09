@@ -10,7 +10,7 @@
 \alias{names,ParquetDataFrame-method}
 \alias{rownames<-,ParquetDataFrame-method}
 \alias{names<-,ParquetDataFrame-method}
-\alias{extractROWS,ParquetDataFrame-method}
+\alias{extractROWS,ParquetDataFrame,ANY-method}
 \alias{extractCOLS,ParquetDataFrame-method}
 \alias{[[,ParquetDataFrame-method}
 \alias{replaceROWS,ParquetDataFrame-method}
@@ -66,11 +66,13 @@ df$carb
 
 # Some operations preserve the ParquetDataFrame:
 df[,1:5]
-cbind(df, df)
+combined <- cbind(df, df)
+class(combined)
 
 # ... but most operations collapse to a regular DFrame:
 df[1:5,]
-cbind(df, some_new_name=df[,1])
+combined2 <- cbind(df, some_new_name=df[,1])
+class(combined2)
 
 }
 \author{
