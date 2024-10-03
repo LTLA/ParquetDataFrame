@@ -142,10 +142,10 @@ se <- se[,se$random_junk < 0.5]
 ## 17               2   0.4853946
 ```
 
-Advanced users can also retrieve the Arrow Table for direct queries against the Parquet file:
+Advanced users can also retrieve the Arrow Dataset for direct queries against the Parquet file:
 
 ```r
-acquireTable(path(df))
+acquireDataset(path(df))
 ## Table
 ## 32 rows x 11 columns
 ## $mpg <double>

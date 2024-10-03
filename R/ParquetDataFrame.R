@@ -76,7 +76,7 @@
 #' @export
 ParquetDataFrame <- function(path, columns=NULL, nrows=NULL) {
     if (is.null(columns) || is.null(nrows)) {
-        tab <- acquireTable(path)
+        tab <- acquireDataset(path)
         if (is.null(columns)) {
             columns <- colnames(tab)
         }
@@ -319,7 +319,7 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 
 #' @export
 setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, optional = FALSE, ...) {
-    tab <- acquireTable(x@path)
+    tab <- acquireDataset(x@path)
 
     ucol <- unique(x@columns)
     is.same <- identical(x@columns, ucol)

@@ -1,24 +1,24 @@
 persistent <- new.env()
 persistent$handles <- list()
 
-#' Acquire the Arrow Table 
+#' Acquire the Arrow Dataset
 #'
-#' Acquire a (possibly cached) Arrow Table representing a Parquet file given its path.
+#' Acquire a (possibly cached) Arrow Dataset representing a Parquet file given its path.
 #' 
 #' @param path String containing a path to a Parquet file.
 #'
 #' @return 
-#' For \code{acquireTable}, an Arrow Table identical to that returned by \code{\link{read_parquet}} with \code{as_data_frame=FALSE}.
+#' For \code{acquireDataset}, an Arrow Dataset identical to that returned by \code{\link{read_parquet}} with \code{as_data_frame=FALSE}.
 #'
-#' For \code{releaseTable}, any existing Table for the \code{path} is cleared from cache, and \code{NULL} is invisibly returned.
-#' If \code{path=NULL}, all cached Tables are removed.
+#' For \code{releaseDataset}, any existing Dataset for the \code{path} is cleared from cache, and \code{NULL} is invisibly returned.
+#' If \code{path=NULL}, all cached Datasets are removed.
 #'
 #' @author Aaron Lun
 #'
 #' @details
-#' \code{acquireTable} will cache the Table object in the current R session to avoid repeated initialization.
+#' \code{acquireDataset} will cache the Dataset object in the current R session to avoid repeated initialization.
 #' This improves efficiency for repeated calls, e.g., when creating a \linkS4class{DataFrame} with multiple columns from the same Parquet file.
-#' The cached Table for any given \code{path} can be deleted by calling \code{releaseTable} for the same \code{path}.
+#' The cached Dataset for any given \code{path} can be deleted by calling \code{releaseDataset} for the same \code{path}.
 #'
 #' @examples
 #' # Mocking up a file:
@@ -26,13 +26,13 @@ persistent$handles <- list()
 #' on.exit(unlink(tf))
 #' arrow::write_parquet(mtcars, tf)
 #'
-#' acquireTable(tf)
-#' acquireTable(tf) # just re-uses the cache
-#' releaseTable(tf) # clears the cache
+#' acquireDataset(tf)
+#' acquireDataset(tf) # just re-uses the cache
+#' releaseDataset(tf) # clears the cache
 #' @export
 #' @importFrom arrow read_parquet
 #' @importFrom utils tail
-acquireTable <- function(path) {
+acquireDataset <- function(path) {
     # Here we set up an LRU cache for the Parquet handles. 
     # This avoids the initialization time when querying lots of columns.
     nhandles <- length(persistent$handles)
@@ -58,8 +58,8 @@ acquireTable <- function(path) {
 }
 
 #' @export
-#' @rdname acquireTable
-releaseTable <- function(path) {
+#' @rdname acquireDataset
+releaseDataset <- function(path) {
     if (is.null(path)) {
         persistent$handles <- list()
     } else {

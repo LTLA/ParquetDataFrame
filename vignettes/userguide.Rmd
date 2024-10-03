@@ -91,13 +91,13 @@ The fallback to `DFrame` ensures that a `ParquetDataFrame` is interoperable with
 Of course, when a collapse occurs, we lose all guarantees that the in-memory representation is compatible with the underlying Parquet file.
 This may preclude further optimizations in cases where we consider directly operating on the file. 
 
-# Retrieving the Arrow Table
+# Retrieving the Arrow Dataset
 
-At any point, users can retrieve a handle to the underlying Parquet file via the `acquireTable()` function.
+At any point, users can retrieve a handle to the underlying Parquet file via the `acquireDataset()` function.
 This can be used with methods in the `r CRANpkg("arrow")` package to push more complex operations to the C++ libraries for greater efficiency.
 
 ```{r}
-handle <- acquireTable(path(df))
+handle <- acquireDataset(path(df))
 handle
 ```
 
