@@ -42,10 +42,11 @@ persistent$handles <- list()
 #' @export
 #' @importFrom arrow as_arrow_table
 #' @importFrom arrow open_dataset
+#' @importFrom S4Vectors isSingleString
 #' @importFrom utils tail
 acquireTable <- function(path, ...) {
-    if (!(is.character(path) && length(path) == 1L)) {
-        stop("\"path\" must be a single string")
+    if (!(isSingleString(path) && nzchar(path))) {
+        stop("'path' must be a single non-empty string")
     }
 
     # Here we set up an LRU cache for the Parquet handles.
