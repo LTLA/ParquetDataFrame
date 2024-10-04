@@ -23,7 +23,7 @@ knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
 # Overview
 
 The `ParquetDataFrame`, as its name suggests, is a `DataFrame` where the columns are derived from Parquet data.
-This is fully file-backed so no data is actually loaded into memory until requested, allowing users to represent large tables in limited memory.
+This is fully file-backed so no data is actually loaded into memory until requested, allowing users to represent large datasets in limited memory.
 As the `ParquetDataFrame` inherits from `r Biocpkg("S4Vectors")`' `DataFrame`, it can be used anywhere in Bioconductor's ecosystem that accepts a `DataFrame`, 
 e.g., as the column data of a `SummarizedExperiment`, or inside a `BumpyDataFrameMatrix` from the `r Biocpkg("BumpyMatrix")` package.
 
