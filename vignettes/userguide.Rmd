@@ -23,7 +23,7 @@ knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
 # Overview
 
 The `ParquetDataFrame`, as its name suggests, is a `DataFrame` where the columns are derived from Parquet data.
-This is fully file-backed so no data is actually loaded into memory until requested, allowing users to represent large datasets in limited memory.
+This is fully file-backed so no data is actually loaded into memory until requested, allowing users to represent large tables in limited memory.
 As the `ParquetDataFrame` inherits from `r Biocpkg("S4Vectors")`' `DataFrame`, it can be used anywhere in Bioconductor's ecosystem that accepts a `DataFrame`, 
 e.g., as the column data of a `SummarizedExperiment`, or inside a `BumpyDataFrameMatrix` from the `r Biocpkg("BumpyMatrix")` package.
 
@@ -91,13 +91,13 @@ The fallback to `DFrame` ensures that a `ParquetDataFrame` is interoperable with
 Of course, when a collapse occurs, we lose all guarantees that the in-memory representation is compatible with the underlying Parquet data.
 This may preclude further optimizations in cases where we consider directly operating on the Parquet data on disk.
 
-# Retrieving the Arrow Dataset
+# Retrieving the Arrow Table
 
-At any point, users can retrieve a handle to the underlying Parquet data via the `acquireDataset()` function.
+At any point, users can retrieve a handle to the underlying Parquet data via the `acquireTable()` function.
 This can be used with methods in the `r CRANpkg("arrow")` package to push more complex operations to the C++ libraries for greater efficiency.
 
 ```{r}
-handle <- acquireDataset(path(df))
+handle <- acquireTable(path(df))
 handle
 ```
 

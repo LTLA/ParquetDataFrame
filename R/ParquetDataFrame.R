@@ -72,8 +72,8 @@
 #'
 #' @export
 ParquetDataFrame <- function(path, ...) {
-    ds <- acquireDataset(path, ...)
-    new("ParquetDataFrame", path=path, columns=colnames(ds), nrows=nrow(ds))
+    tab <- acquireTable(path, ...)
+    new("ParquetDataFrame", path=path, columns=colnames(tab), nrows=nrow(tab))
 }
 
 #' @export
@@ -308,10 +308,8 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 }
 
 #' @export
-#' @importFrom arrow as_arrow_table
 setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, optional = FALSE, ...) {
-    ds <- acquireDataset(x@path)
-    tab <- as_arrow_table(ds)
+    tab <- acquireTable(x@path)
 
     ucol <- unique(x@columns)
     is.same <- identical(x@columns, ucol)
