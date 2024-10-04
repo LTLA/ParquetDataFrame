@@ -1,6 +1,6 @@
 # Bioconductor-compatible Parquet objects
 
-This package implements Bioconductor-friendly bindings to Parquet files so that they can be used inside standard objects like `DataFrame`s and `SummarizedExperiment`s.
+This package implements Bioconductor-friendly bindings to Parquet data so that they can be used inside standard objects like `DataFrame`s and `SummarizedExperiment`s.
 Usage is pretty simple:
 
 ```r
@@ -94,7 +94,7 @@ class(colData(se, withDimnames=FALSE))
 ## [1] "ParquetDataFrame"
 ```
 
-This behaves properly when we operate on the parent structure, even if those operations introduce inconsistencies from the Parquet file.
+This behaves properly when we operate on the parent structure, even if those operations introduce inconsistencies from the Parquet data.
 In such cases, the `ParquetDataFrame` will collapse to a `DFrame` of `ParquetColumnVector`s, still file-backed but possibly with delayed operations.
 
 ```r

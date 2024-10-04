@@ -3,24 +3,24 @@
 #' Represent a column of a Parquet file as a 1-dimensional \linkS4class{DelayedArray}.
 #' This allows us to use Parquet data inside \linkS4class{DataFrame}s without loading them into memory.
 #'
-#' @param path String containing a path to a Parquet file.
-#' @param column String containing the name of the column inside the file.
+#' @param path String specifying a path to a Parquet data directory or file.
+#' @param column String containing the name of the column in the data.
 #' @param length Integer containing the number of rows.
-#' If \code{NULL}, this is determined by inspecting the file.
+#' If \code{NULL}, this is determined by inspecting the data.
 #' This should only be supplied for efficiency purposes, to avoid a file look-up on construction.
 #' @param type String specifying the type of the data.
-#' If \code{NULL}, this is determined by inspecting the file.
+#' If \code{NULL}, this is determined by inspecting the data.
 #' Users may specify this to avoid a look-up, or to coerce the output into a different type.
-#' @param x Either a string containing the path to a Parquet file (to be used as \code{path}),
+#' @param x Either a string containing the path to the Parquet data (to be used as \code{path}),
 #' or an existing ParquetColumnSeed object.
-#' @param ... Further arguments to be passed to the \code{ParquetColumnSeed} constructor.
+#' @param ... Further arguments to be passed to \code{\link[arrow]{open_dataset}}.
 #'
 #' @return For \code{ParquetColumnSeed}, a ParquetColumnSeed is returned, obviously.
-#' 
+#'
 #' For \code{ParquetColumnVector}, a ParquetColumnVector is returned.
 #'
-#' @author Aaron Lun
-#' 
+#' @author Aaron Lun, Patrick Aboyoun
+#'
 #' @examples
 #' # Mocking up a file:
 #' tf <- tempfile()
@@ -65,9 +65,11 @@ setMethod("type", "ParquetColumnSeed", function(x) x@type)
 setMethod("path", "ParquetColumnSeed", function(object) object@path)
 
 #' @export
+#' @importFrom arrow as_arrow_table
 #' @importFrom DelayedArray extract_array
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
-    tab <- acquireDataset(x@path)
+    ds <- acquireDataset(x@path)
+    tab <- as_arrow_table(ds)
     slice <- index[[1]]
 
     if (is.null(slice)) {
@@ -104,15 +106,16 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 #' @export
 #' @rdname ParquetColumnSeed
 #' @importFrom DelayedArray type
-ParquetColumnSeed <- function(path, column, type=NULL, length=NULL) {
+#' @importFrom utils head
+ParquetColumnSeed <- function(path, column, type=NULL, length=NULL, ...) {
     if (is.null(type) || is.null(length)) {
-        tab <- acquireDataset(path)
-        col <- tab[[column]]
+        ds <- acquireDataset(path, ...)
         if (is.null(type)){ 
-            type <- DelayedArray::type(col$Slice(0,0)$as_vector())
+            vec <- head(ds, 0L)[[column]]$as_vector()
+            type <- DelayedArray::type(vec)
         }
         if (is.null(length)) {
-            length <- nrow(tab)
+            length <- nrow(ds)
         }
     } 
     new("ParquetColumnSeed", path=path, column=column, length=length, type=type)
@@ -127,9 +130,9 @@ setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVecto
 
 #' @export
 #' @rdname ParquetColumnSeed
-ParquetColumnVector <- function(x, ...) {
+ParquetColumnVector <- function(x, column, type=NULL, length=NULL, ...) {
     if (!is(x, "ParquetColumnSeed")) {
-        x <- ParquetColumnSeed(x, ...)
+        x <- ParquetColumnSeed(x, column=column, type=type, length=length, ...)
     }
     new("ParquetColumnVector", seed=x)
 }

@@ -3,25 +3,26 @@ persistent$handles <- list()
 
 #' Acquire the Arrow Dataset
 #'
-#' Acquire a (possibly cached) Arrow Dataset representing a Parquet file given its path.
-#' 
-#' @param path String containing a path to a Parquet file.
+#' Acquire a (possibly cached) Arrow Dataset created from Parquet data.
 #'
-#' @return 
-#' For \code{acquireDataset}, an Arrow Dataset identical to that returned by \code{\link{read_parquet}} with \code{as_data_frame=FALSE}.
+#' @param path String specifying a path to a Parquet data directory or file.
+#' @param ... Further arguments to be passed to \code{\link[arrow]{open_dataset}}.
+#'
+#' @return
+#' For \code{acquireDataset}, an Arrow Dataset identical to that returned by \code{\link[arrow]{open_dataset}}.
 #'
 #' For \code{releaseDataset}, any existing Dataset for the \code{path} is cleared from cache, and \code{NULL} is invisibly returned.
 #' If \code{path=NULL}, all cached Datasets are removed.
 #'
-#' @author Aaron Lun
+#' @author Aaron Lun, Patrick Aboyoun
 #'
 #' @details
 #' \code{acquireDataset} will cache the Dataset object in the current R session to avoid repeated initialization.
-#' This improves efficiency for repeated calls, e.g., when creating a \linkS4class{DataFrame} with multiple columns from the same Parquet file.
+#' This improves efficiency for repeated calls, e.g., when creating a \linkS4class{DataFrame} with multiple columns from the same Parquet data path.
 #' The cached Dataset for any given \code{path} can be deleted by calling \code{releaseDataset} for the same \code{path}.
 #'
 #' @examples
-#' # Mocking up a file:
+#' # Mocking up a single parquet file:
 #' tf <- tempfile()
 #' on.exit(unlink(tf))
 #' arrow::write_parquet(mtcars, tf)
@@ -29,11 +30,24 @@ persistent$handles <- list()
 #' acquireDataset(tf)
 #' acquireDataset(tf) # just re-uses the cache
 #' releaseDataset(tf) # clears the cache
+#'
+#' # Mocking up a parquet data diretory:
+#' td <- tempfile()
+#' on.exit(unlink(td), add = TRUE)
+#' arrow::write_dataset(mtcars, td, format = "parquet", partitioning = "cyl")
+#'
+#' acquireDataset(td)
+#' acquireDataset(td) # just re-uses the cache
+#' releaseDataset(td) # clears the cache
 #' @export
-#' @importFrom arrow read_parquet
+#' @importFrom arrow open_dataset
 #' @importFrom utils tail
-acquireDataset <- function(path) {
-    # Here we set up an LRU cache for the Parquet handles. 
+acquireDataset <- function(path, ...) {
+    if (!(is.character(path) && length(path) == 1L)) {
+        stop("\"path\" must be a single string")
+    }
+
+    # Here we set up an LRU cache for the Parquet handles.
     # This avoids the initialization time when querying lots of columns.
     nhandles <- length(persistent$handles)
 
@@ -52,7 +66,7 @@ acquireDataset <- function(path) {
         persistent$handles <- tail(persistent$handles, limit - 1L)
     }
 
-    output <- read_parquet(path, as_data_frame=FALSE)
+    output <- open_dataset(path, format = "parquet", ...)
     persistent$handles[[path]] <- output
     output
 }

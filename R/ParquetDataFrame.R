@@ -1,27 +1,24 @@
 #' Parquet-backed DataFrame
 #'
 #' Create a Parquet-backed \linkS4class{DataFrame}, where the data are kept on disk until requested.
-#' 
-#' @param path String containing a path to a Parquet file.
-#' @param columns Character vector containing the names of columns in a Parquet file.
-#' If \code{NULL}, this is determined from \code{path}.
-#' @param nrows Integer scalar specifying the number of rows in a Parquet file.
-#' If \code{NULL}, this is determined from \code{path}.
+#'
+#' @param path String specifying a path to a Parquet data directory or file.
+#' @param ... Further arguments to be passed to \code{\link[arrow]{open_dataset}}.
 #'
 #' @return A ParquetDataFrame where each column is a \linkS4class{ParquetColumnVector}.
 #'
 #' @details
 #' The ParquetDataFrame is essentially just a \linkS4class{DataFrame} of \linkS4class{ParquetColumnVector} objects.
-#' It is primarily useful for indicating that the in-memory representation is consistent with the underlying Parquet file
+#' It is primarily useful for indicating that the in-memory representation is consistent with the underlying Parquet data
 #' (e.g., no delayed filter/mutate operations have been applied, no data has been added from other files).
-#' Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet file.
-#' 
+#' Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet data.
+#'
 #' In that vein, operations on a ParquetDataFrame may return another ParquetDataFrame if the operation does not introduce inconsistencies with the file-backed data.
 #' For example, slicing or combining by column will return a ParquetDataFrame as the contents of the retained columns are unchanged.
 #' In other cases, the ParquetDataFrame will collapse to a regular \linkS4class{DFrame} of \linkS4class{ParquetColumnVector} objects before applying the operation;
 #' these are still file-backed but lack the guarantee of file consistency.
 #'
-#' @author Aaron Lun
+#' @author Aaron Lun, Patrick Aboyoun
 #' @examples
 #' # Mocking up a file:
 #' tf <- tempfile()
@@ -74,17 +71,9 @@
 #' coerce,ParquetDataFrame,DFrame-method
 #'
 #' @export
-ParquetDataFrame <- function(path, columns=NULL, nrows=NULL) {
-    if (is.null(columns) || is.null(nrows)) {
-        tab <- acquireDataset(path)
-        if (is.null(columns)) {
-            columns <- colnames(tab)
-        }
-        if (is.null(nrows)) {
-            nrows <- nrow(tab)
-        }
-    } 
-    new("ParquetDataFrame", path=path, columns=columns, nrows=nrows)
+ParquetDataFrame <- function(path, ...) {
+    ds <- acquireDataset(path, ...)
+    new("ParquetDataFrame", path=path, columns=colnames(ds), nrows=nrow(ds))
 }
 
 #' @export
@@ -307,6 +296,7 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 
 #' @importFrom S4Vectors make_zero_col_DFrame mcols mcols<- metadata metadata<-
 .collapse_to_df <- function(x) {
+    warning("creating a DFrame from the ParquetDataFrame")
     df <- make_zero_col_DFrame(x@nrows)
     for (i in seq_along(x@columns)) {
         df[[as.character(i)]] <- ParquetColumnVector(x@path, column=x@columns[i])
@@ -318,8 +308,10 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 }
 
 #' @export
+#' @importFrom arrow as_arrow_table
 setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, optional = FALSE, ...) {
-    tab <- acquireDataset(x@path)
+    ds <- acquireDataset(x@path)
+    tab <- as_arrow_table(ds)
 
     ucol <- unique(x@columns)
     is.same <- identical(x@columns, ucol)
@@ -333,4 +325,3 @@ setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, opt
 
 #' @export
 setAs("ParquetDataFrame", "DFrame", function(from) .collapse_to_df(from))
-

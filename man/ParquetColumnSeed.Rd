@@ -12,27 +12,27 @@
 \alias{ParquetColumnVector}
 \title{Column of a Parquet file}
 \usage{
-ParquetColumnSeed(path, column, type = NULL, length = NULL)
+ParquetColumnSeed(path, column, type = NULL, length = NULL, ...)
 
-ParquetColumnVector(x, ...)
+ParquetColumnVector(x, column, type = NULL, length = NULL, ...)
 }
 \arguments{
-\item{path}{String containing a path to a Parquet file.}
+\item{path}{String specifying a path to a Parquet data directory or file.}
 
-\item{column}{String containing the name of the column inside the file.}
+\item{column}{String containing the name of the column in the data.}
 
 \item{type}{String specifying the type of the data.
-If \code{NULL}, this is determined by inspecting the file.
+If \code{NULL}, this is determined by inspecting the data.
 Users may specify this to avoid a look-up, or to coerce the output into a different type.}
 
 \item{length}{Integer containing the number of rows.
-If \code{NULL}, this is determined by inspecting the file.
+If \code{NULL}, this is determined by inspecting the data.
 This should only be supplied for efficiency purposes, to avoid a file look-up on construction.}
 
-\item{x}{Either a string containing the path to a Parquet file (to be used as \code{path}),
-or an existing ParquetColumnSeed object.}
+\item{...}{Further arguments to be passed to \code{\link[arrow]{open_dataset}}.}
 
-\item{...}{Further arguments to be passed to the \code{ParquetColumnSeed} constructor.}
+\item{x}{Either a string containing the path to the Parquet data (to be used as \code{path}),
+or an existing ParquetColumnSeed object.}
 }
 \value{
 For \code{ParquetColumnSeed}, a ParquetColumnSeed is returned, obviously.
@@ -61,5 +61,5 @@ DataFrame(collected)
 
 }
 \author{
-Aaron Lun
+Aaron Lun, Patrick Aboyoun
 }

@@ -22,7 +22,7 @@ knitr::opts_chunk$set(error=FALSE, warning=FALSE, message=FALSE)
 
 # Overview
 
-The `ParquetDataFrame`, as its name suggests, is a `DataFrame` where the columns are derived from data in a Parquet file.
+The `ParquetDataFrame`, as its name suggests, is a `DataFrame` where the columns are derived from Parquet data.
 This is fully file-backed so no data is actually loaded into memory until requested, allowing users to represent large datasets in limited memory.
 As the `ParquetDataFrame` inherits from `r Biocpkg("S4Vectors")`' `DataFrame`, it can be used anywhere in Bioconductor's ecosystem that accepts a `DataFrame`, 
 e.g., as the column data of a `SummarizedExperiment`, or inside a `BumpyDataFrameMatrix` from the `r Biocpkg("BumpyMatrix")` package.
@@ -42,7 +42,7 @@ df <- ParquetDataFrame(tf)
 df
 ```
 
-These support all the usual methods for a `DataFrame`, except that the data is kept on file and referenced as needed:
+These support all the usual methods for a `DataFrame`, except that the data is kept on disk and referenced as needed:
 
 ```{r}
 nrow(df)
@@ -68,7 +68,7 @@ as.vector(df$mpg)
 
 The main goal of a `ParquetDataFrame` is to serve as a consistent representation of the data inside a Parquet file.
 However, this cannot be easily reconciled with many `DataFrame` operations that add or change data - 
-at least, not without mutating the Parquet file, which is outside the scope of the `ParquetDataFrame` class.
+at least, not without mutating the Parquet data, which is outside the scope of the `ParquetDataFrame` class.
 To handle such operations, the `ParquetDataFrame` will collapse to a `DFrame` of `ParquetColumnVector`s:
 
 ```{r}
@@ -88,12 +88,12 @@ top.hits
 ```
 
 The fallback to `DFrame` ensures that a `ParquetDataFrame` is interoperable with other Bioconductor data structures that need to perform arbitrary `DataFrame` operations.
-Of course, when a collapse occurs, we lose all guarantees that the in-memory representation is compatible with the underlying Parquet file.
-This may preclude further optimizations in cases where we consider directly operating on the file. 
+Of course, when a collapse occurs, we lose all guarantees that the in-memory representation is compatible with the underlying Parquet data.
+This may preclude further optimizations in cases where we consider directly operating on the Parquet data on disk.
 
 # Retrieving the Arrow Dataset
 
-At any point, users can retrieve a handle to the underlying Parquet file via the `acquireDataset()` function.
+At any point, users can retrieve a handle to the underlying Parquet data via the `acquireDataset()` function.
 This can be used with methods in the `r CRANpkg("arrow")` package to push more complex operations to the C++ libraries for greater efficiency.
 
 ```{r}

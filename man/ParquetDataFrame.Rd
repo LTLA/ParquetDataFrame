@@ -24,16 +24,12 @@
 \alias{coerce,ParquetDataFrame,DFrame-method}
 \title{Parquet-backed DataFrame}
 \usage{
-ParquetDataFrame(path, columns = NULL, nrows = NULL)
+ParquetDataFrame(path, ...)
 }
 \arguments{
-\item{path}{String containing a path to a Parquet file.}
+\item{path}{String specifying a path to a Parquet data directory or file.}
 
-\item{columns}{Character vector containing the names of columns in a Parquet file.
-If \code{NULL}, this is determined from \code{path}.}
-
-\item{nrows}{Integer scalar specifying the number of rows in a Parquet file.
-If \code{NULL}, this is determined from \code{path}.}
+\item{...}{Further arguments to be passed to \code{\link[arrow]{open_dataset}}.}
 }
 \value{
 A ParquetDataFrame where each column is a \linkS4class{ParquetColumnVector}.
@@ -43,9 +39,9 @@ Create a Parquet-backed \linkS4class{DataFrame}, where the data are kept on disk
 }
 \details{
 The ParquetDataFrame is essentially just a \linkS4class{DataFrame} of \linkS4class{ParquetColumnVector} objects.
-It is primarily useful for indicating that the in-memory representation is consistent with the underlying Parquet file
+It is primarily useful for indicating that the in-memory representation is consistent with the underlying Parquet data
 (e.g., no delayed filter/mutate operations have been applied, no data has been added from other files).
-Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet file.
+Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet data.
 
 In that vein, operations on a ParquetDataFrame may return another ParquetDataFrame if the operation does not introduce inconsistencies with the file-backed data.
 For example, slicing or combining by column will return a ParquetDataFrame as the contents of the retained columns are unchanged.
@@ -77,5 +73,5 @@ class(combined2)
 
 }
 \author{
-Aaron Lun
+Aaron Lun, Patrick Aboyoun
 }
