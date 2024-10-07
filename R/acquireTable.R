@@ -1,5 +1,9 @@
 persistent <- new.env()
 persistent$handles <- list()
+cacheTable <- function(name, value) {
+    persistent$handles[[name]] <- value
+    invisible(name)
+}
 
 #' Acquire the Arrow Table
 #'
@@ -70,7 +74,7 @@ acquireTable <- function(path, ...) {
 
     ds <- open_dataset(path, format = "parquet", ...)
     output <- as_arrow_table(ds)
-    persistent$handles[[path]] <- output
+    cacheTable(path, output)
     output
 }
 
