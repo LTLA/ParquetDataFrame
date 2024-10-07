@@ -296,7 +296,6 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 
 #' @importFrom S4Vectors make_zero_col_DFrame mcols mcols<- metadata metadata<-
 .collapse_to_df <- function(x) {
-    warning("creating a DFrame from the ParquetDataFrame")
     df <- make_zero_col_DFrame(x@nrows)
     for (i in seq_along(x@columns)) {
         df[[as.character(i)]] <- ParquetColumnVector(x@path, column=x@columns[i])
