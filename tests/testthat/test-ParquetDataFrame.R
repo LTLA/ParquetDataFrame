@@ -14,26 +14,27 @@ test_that("basic methods work for a ParquetDataFrame", {
     expect_identical(as.data.frame(x), unnamed)
 })
 
-test_that("renaming collapses to an ordinary DFrame", {
+test_that("renaming columns creates a new ParquetDataFrame", {
     copy <- x
     replacements <- sprintf("COL%i", seq_len(ncol(x)))
     colnames(copy) <- replacements
-    expect_s4_class(copy, "DFrame")
+    expect_s4_class(copy, "ParquetDataFrame")
     expect_identical(colnames(copy), replacements)
 
     copy <- x
-    replacements <- sprintf("COL%i", seq_len(nrow(x)))
+    colnames(copy) <- colnames(x)
+    expect_s4_class(copy, "ParquetDataFrame")
+})
+
+test_that("adding rownames collapses to an ordinary DFrame", {
+    copy <- x
+    replacements <- sprintf("ROW%i", seq_len(nrow(x)))
     rownames(copy) <- replacements
     expect_s4_class(copy, "DFrame")
     expect_identical(rownames(copy), replacements)
 
-    # Unless the new names are the same as the old names.
     copy <- x
     rownames(copy) <- NULL
-    expect_s4_class(copy, "ParquetDataFrame")
-
-    copy <- x
-    colnames(copy) <- colnames(x)
     expect_s4_class(copy, "ParquetDataFrame")
 })
 

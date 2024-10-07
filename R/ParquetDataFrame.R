@@ -105,11 +105,13 @@ setReplaceMethod("rownames", "ParquetDataFrame", function(x, value) {
 
 #' @export
 setReplaceMethod("names", "ParquetDataFrame", function(x, value) {
-    if (!identical(value, names(x))) {
-        x <- .collapse_to_df(x)
-        names(x) <- value
+    if (identical(value, names(x))) {
+        return(x)
     }
-    x
+    tab <- acquireTable(x@path)
+    names(tab) <- value
+    path <- cacheTable(tab)
+    initialize(x, path=path, columns=value)
 })
 
 #' @export
