@@ -142,23 +142,22 @@ se <- se[,se$random_junk < 0.5]
 ## 17               2   0.4853946
 ```
 
-Advanced users can also retrieve the Arrow Table for direct queries against the Parquet file:
+Advanced users can also use the `query` method to retrieve the query for the underlying Arrow Dataset:
 
 ```r
-acquireTable(path(df))
-## Table
-## 32 rows x 11 columns
-## $mpg <double>
-## $cyl <double>
-## $disp <double>
-## $hp <double>
-## $drat <double>
-## $wt <double>
-## $qsec <double>
-## $vs <double>
-## $am <double>
-## $gear <double>
-## $carb <double>
-## 
-## See $metadata for additional Schema metadata
+query(df)
+## FileSystemDataset (query)
+## mpg: double
+## cyl: double
+## disp: double
+## hp: double
+## drat: double
+## wt: double
+## qsec: double
+## vs: double
+## am: double
+## gear: double
+## carb: double
+##
+## See $.data for the source Arrow object
 ```

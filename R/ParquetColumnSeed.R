@@ -45,6 +45,7 @@
 #' ParquetColumnVector-class
 #' DelayedArray,ParquetColumnSeed-method
 #'
+#' @include query.R
 #' @include acquireDataset.R
 #'
 #' @name ParquetColumnSeed
@@ -53,6 +54,9 @@ NULL
 #' @export
 #' @import methods
 setClass("ParquetColumnSeed", slots = c(query = "arrow_dplyr_query", length = "integer", type = "character"))
+
+#' @export
+setMethod("query", "ParquetColumnSeed", function(x) x@query)
 
 #' @export
 setMethod("dim", "ParquetColumnSeed", function(x) x@length)
@@ -67,7 +71,7 @@ setMethod("type", "ParquetColumnSeed", function(x) x@type)
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
     slice <- index[[1]]
     if (is.null(slice)) {
-        output <- pull(x@query, as_vector = TRUE)
+        output <- pull(query(x), as_vector = TRUE)
     } else if (length(slice) == 0) {
         output <- logical()
     } else {
@@ -84,7 +88,7 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
             modified <- TRUE
         }
 
-        output <- pull(x@query, as_vector = FALSE)$Take(slice - 1L)$as_vector()
+        output <- pull(query(x), as_vector = FALSE)$Take(slice - 1L)$as_vector()
         if (modified) {
             m <- match(original, slice)
             output <- output[m]
@@ -96,6 +100,10 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
     }
     array(output)
 })
+
+#' @export
+#' @importFrom DelayedArray DelayedArray
+setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVector(seed))
 
 #' @export
 #' @rdname ParquetColumnSeed
@@ -121,8 +129,8 @@ ParquetColumnSeed <- function(path, column, type = NULL, length = NULL, ...) {
 setClass("ParquetColumnVector", contains = "DelayedArray", slots = c(seed = "ParquetColumnSeed"))
 
 #' @export
-#' @importFrom DelayedArray DelayedArray
-setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVector(seed))
+#' @importFrom DelayedArray seed
+setMethod("query", "ParquetColumnVector", function(x) query(seed(x)))
 
 #' @export
 #' @rdname ParquetColumnSeed

@@ -1,15 +1,6 @@
 persistent <- new.env()
 persistent$handles <- list()
 
-setOldClass("arrow_dplyr_query")
-
-identicalQueryBody <- function(x, y) {
-    body <-  c(".data", "filtered_rows", "group_by_vars", "drop_empty_groups", "arrange_vars", "arrange_desc")
-    inherits(x, "arrow_dplyr_query") &&
-    inherits(y, "arrow_dplyr_query") &&
-    identical(unclass(x)[body], unclass(y)[body])
-}
-
 #' Acquire the Arrow Dataset
 #'
 #' Acquire a (possibly cached) Arrow Dataset created from Parquet data.
