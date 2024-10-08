@@ -6,7 +6,6 @@
 \alias{nrow,ParquetDataFrame-method}
 \alias{ncol,ParquetDataFrame-method}
 \alias{length,ParquetDataFrame-method}
-\alias{path,ParquetDataFrame-method}
 \alias{rownames,ParquetDataFrame-method}
 \alias{names,ParquetDataFrame-method}
 \alias{rownames<-,ParquetDataFrame-method}

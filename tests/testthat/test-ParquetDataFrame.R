@@ -89,16 +89,7 @@ test_that("slicing by rows collapses to an ordinary DFrame", {
     expect_identical(as.vector(copy[[1]]), example_df[[1]][i])
 })
 
-test_that("subset assignment usually collapses to an ordinary DFrame", {
-    copy <- x
-    copy[,c(1,2,3)] <- copy[,c(4,5,6)]
-    expect_s4_class(copy, "DFrame")
-    expect_s4_class(copy[[1]], "ParquetColumnVector")
-    ref <- example_df
-    ref[,c(1,2,3)] <- ref[,c(4,5,6)]
-    rownames(ref) <- NULL
-    expect_identical(as.data.frame(copy), ref)
-
+test_that("subset assignments that collapse to an ordinary DFrame", {
     copy <- x
     copy[1:5,] <- copy[9:13,]
     expect_s4_class(copy, "DFrame")
@@ -114,21 +105,12 @@ test_that("subset assignment usually collapses to an ordinary DFrame", {
     expect_identical(colnames(copy), c(colnames(x), "foobar"))
 
     copy <- x
-    copy[[1]] <- copy[[3]]
-    expect_s4_class(copy, "DFrame")
-    expect_s4_class(copy[[1]], "ParquetColumnVector")
-    ref <- example_df
-    ref[[1]] <- ref[[3]]
-    rownames(ref) <- NULL
-    expect_identical(as.data.frame(copy), ref)
-
-    copy <- x
     copy$some_random_thing <- runif(nrow(x))
     expect_s4_class(copy, "DFrame")
     expect_identical(colnames(copy), c(colnames(x), "some_random_thing"))
 })
 
-test_that("no-op subset assignment returns a ParquetDataFrame", {
+test_that("subset assignments that return a ParquetDataFrame", {
     copy <- x
     copy[,1] <- copy[,1]
     expect_s4_class(copy, "ParquetDataFrame")
@@ -140,11 +122,29 @@ test_that("no-op subset assignment returns a ParquetDataFrame", {
     copy <- x
     copy[[3]] <- copy[[3]]
     expect_s4_class(copy, "ParquetDataFrame")
+
+    copy <- x
+    copy[[1]] <- copy[[3]]
+    expect_s4_class(copy, "ParquetDataFrame")
+    expect_s4_class(copy[[1]], "ParquetColumnVector")
+    ref <- example_df
+    ref[[1]] <- ref[[3]]
+    rownames(ref) <- NULL
+    expect_identical(as.data.frame(copy), ref)
+
+    copy <- x
+    copy[,c(1,2,3)] <- copy[,c(4,5,6)]
+    expect_s4_class(copy, "ParquetDataFrame")
+    expect_s4_class(copy[[1]], "ParquetColumnVector")
+    ref <- example_df
+    ref[,c(1,2,3)] <- ref[,c(4,5,6)]
+    rownames(ref) <- NULL
+    expect_identical(as.data.frame(copy), ref)
 })
 
 test_that("rbinding collapses to an ordinary DFrame", {
     copy <- rbind(x, x)
-    expect_s4_class(copy, "DataFrame")
+    expect_s4_class(copy, "DFrame")
     expect_s4_class(copy[[1]], "DelayedArray")
 
     ref <- rbind(example_df, example_df)
@@ -154,9 +154,9 @@ test_that("rbinding collapses to an ordinary DFrame", {
 
 test_that("cbinding may or may not collapse to an ordinary DFrame", {
     # Same path, we get another PDF.
-    copy <- cbind(x, x)
+    copy <- cbind(x, foo=x[["carb"]])
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), rep(colnames(x), 2))
+    expect_identical(colnames(copy), c(colnames(example_df), "foo"))
 
     # Different paths causes collapse.
     tmp <- tempfile()
@@ -170,28 +170,34 @@ test_that("cbinding may or may not collapse to an ordinary DFrame", {
     expect_s4_class(copy, "DFrame")
     expect_identical(colnames(copy), rep(colnames(example_df), 2))
 
-    # We can try combining them with PCVs.
-    copy <- cbind(x, foo=x[["carb"]])
+    # Duplicate names causes collapse.
+    copy <- cbind(x, x)
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(example_df), "foo"))
+    expect_identical(colnames(copy), rep(colnames(x), 2))
 
-    copy <- cbind(x, carb=x[["carb"]]) # if the name is the same, we preserve the PDF type.
-    expect_s4_class(copy, "ParquetDataFrame")
+    # Duplicate names causes collapse.
+    copy <- cbind(x, carb=x[["carb"]])
+    expect_s4_class(copy, "DFrame")
     expect_identical(colnames(copy), c(colnames(example_df), "carb"))
 
-    copy <- cbind(carb=x[["carb"]], x) # works in the other direction, too.
-    expect_s4_class(copy, "ParquetDataFrame")
+    # Duplicate names causes collapse.
+    copy <- cbind(carb=x[["carb"]], x)
+    expect_s4_class(copy, "DFrame")
     expect_identical(colnames(copy), c("carb", colnames(example_df)))
 
-    copy <- cbind(x, carb=x2[["carb"]]) # but not if the path is different.
+    # Different paths causes collapse.
+    copy <- cbind(x, carb=x2[["carb"]])
     expect_s4_class(copy, "DFrame")
     expect_identical(colnames(copy), c(colnames(example_df), "carb"))
 })
 
 test_that("cbinding carries forward any metadata", {
     x1 <- x
+    colnames(x1) <- paste0(colnames(x1), "_1")
     mcols(x1) <- DataFrame(whee="A")
+
     x2 <- x
+    colnames(x2) <- paste0(colnames(x2), "_2")
     mcols(x2) <- DataFrame(whee="B")
 
     copy <- cbind(x1, x2)

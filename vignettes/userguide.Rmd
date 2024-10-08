@@ -91,22 +91,22 @@ The fallback to `DFrame` ensures that a `ParquetDataFrame` is interoperable with
 Of course, when a collapse occurs, we lose all guarantees that the in-memory representation is compatible with the underlying Parquet data.
 This may preclude further optimizations in cases where we consider directly operating on the Parquet data on disk.
 
-# Retrieving the Arrow Table
+# Retrieving the Arrow Dataset
 
-At any point, users can retrieve a handle to the underlying Parquet data via the `acquireTable()` function.
+At any point, users can retrieve the query to the underlying Parquet data via the `query` slot.
 This can be used with methods in the `r CRANpkg("arrow")` package to push more complex operations to the C++ libraries for greater efficiency.
 
 ```{r}
-handle <- acquireTable(path(df))
-handle
+query <- df@query
+query
 ```
 
-Note that the acquired handle will not capture any delayed subsetting/mutation operations that have been applied in the R session.
+Note that the acquired query will not capture any delayed subsetting/mutation operations that have been applied in the R session.
 In theory, it is possible to convert a subset of `r Biocpkg("DelayedArray")` operations into their `r CRANpkg("arrow")` equivalents,
-which would improve performance by avoiding the R interpreter when executing a query on the file.
+which would improve performance by avoiding the R interpreter when executing a query on the Parquet data.
 In practice, any performance boost tends to be rather fragile as only a subset of operations are supported,
 meaning that it is easy to silently fall back to R-based evaluation when an unsupported operation is executed.
-Users wanting to optimize query performance should just operate on the handle directly.
+Users wanting to optimize performance should just operate on the query directly.
 
 # Session information {-}
 

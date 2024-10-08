@@ -20,8 +20,8 @@ Imports:
     stats,
     utils,
     methods,
-    BiocGenerics,
-    arrow
+    arrow,
+    dplyr
 Suggests:
     knitr,
     rmarkdown,
@@ -33,3 +33,7 @@ BugReports: https://github.com/LTLA/ParquetDataFrame
 URL: https://github.com/LTLA/ParquetDataFrame
 RoxygenNote: 7.3.2
 Encoding: UTF-8
+Collate:
+    'acquireDataset.R'
+    'ParquetColumnSeed.R'
+    'ParquetDataFrame.R'

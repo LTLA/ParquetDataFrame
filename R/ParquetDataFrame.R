@@ -48,7 +48,6 @@
 #' nrow,ParquetDataFrame-method
 #' ncol,ParquetDataFrame-method
 #' length,ParquetDataFrame-method
-#' path,ParquetDataFrame-method
 #'
 #' rownames,ParquetDataFrame-method
 #' names,ParquetDataFrame-method
@@ -70,29 +69,31 @@
 #' as.data.frame,ParquetDataFrame-method
 #' coerce,ParquetDataFrame,DFrame-method
 #'
+#' @include acquireDataset.R
+#' @include ParquetColumnSeed.R
+#'
 #' @export
+#' @importFrom dplyr everything select
 ParquetDataFrame <- function(path, ...) {
-    tab <- acquireTable(path, ...)
-    new("ParquetDataFrame", path=path, columns=colnames(tab), nrows=nrow(tab))
+    dat <- acquireDataset(path, ...)
+    query <- select(dat, everything())
+    new("ParquetDataFrame", query = query, nrows = nrow(dat))
 }
 
 #' @export
-setClass("ParquetDataFrame", contains="DataFrame", slots=c(path="character", columns="character", nrows="integer"))
+setClass("ParquetDataFrame", contains = "DataFrame", slots = c(query = "arrow_dplyr_query", nrows = "integer"))
 
 #' @export
 setMethod("nrow", "ParquetDataFrame", function(x) x@nrows)
 
 #' @export
-setMethod("length", "ParquetDataFrame", function(x) length(x@columns))
-
-#' @export
-setMethod("path", "ParquetDataFrame", function(object) object@path)
+setMethod("length", "ParquetDataFrame", function(x) length(names(x)))
 
 #' @export
 setMethod("rownames", "ParquetDataFrame", function(x) NULL)
 
 #' @export
-setMethod("names", "ParquetDataFrame", function(x) x@columns)
+setMethod("names", "ParquetDataFrame", function(x) names(x@query))
 
 #' @export
 setReplaceMethod("rownames", "ParquetDataFrame", function(x, value) {
@@ -104,38 +105,48 @@ setReplaceMethod("rownames", "ParquetDataFrame", function(x, value) {
 })
 
 #' @export
+#' @importFrom dplyr rename
+#' @importFrom S4Vectors mcols
+#' @importFrom stats setNames
 setReplaceMethod("names", "ParquetDataFrame", function(x, value) {
     if (identical(value, names(x))) {
         return(x)
     }
-    tab <- acquireTable(x@path)
-    names(tab) <- value
-    path <- cacheTable(tab)
-    initialize(x, path=path, columns=value)
+    query <- rename(x@query, !!!setNames(names(x), value))
+    mc <- mcols(x)
+    if (!is.null(mc)) {
+        rownames(mc) <- value
+    }
+    initialize(x, query = query, elementMetadata = mc)
 })
 
 #' @export
 #' @importFrom S4Vectors extractROWS
 setMethod("extractROWS", "ParquetDataFrame", function(x, i) {
-    if (!missing(i)) {
-        collapsed <- .collapse_to_df(x)
-        extractROWS(collapsed, i)
-    } else {
-        x
+    if (missing(i)) {
+        return(x)
     }
+    collapsed <- .collapse_to_df(x)
+    extractROWS(collapsed, i)
 })
 
 #' @export
 #' @importFrom stats setNames
-#' @importFrom S4Vectors extractCOLS normalizeSingleBracketSubscript
+#' @importFrom S4Vectors extractCOLS mcols normalizeSingleBracketSubscript
 setMethod("extractCOLS", "ParquetDataFrame", function(x, i) {
-    if (!missing(i)) {
-        xstub <- setNames(seq_along(x), names(x))
-        i <- normalizeSingleBracketSubscript(i, xstub)
-        x@columns <- x@columns[i]
-        x@elementMetadata <- extractROWS(x@elementMetadata, i)
+    if (missing(i)) {
+        return(x)
     }
-    x
+    xstub <- setNames(seq_along(x), names(x))
+    i <- normalizeSingleBracketSubscript(i, xstub)
+    if (anyDuplicated(i)) {
+        x <- .collapse_to_df(x)
+        extractCOLS(x, i)
+    } else {
+        query <- x@query[, i]
+        mc <- extractROWS(mcols(x), i)
+        initialize(x, query = query, elementMetadata = mc)
+    }
 })
 
 #' @export
@@ -150,7 +161,7 @@ setMethod("[[", "ParquetDataFrame", function(x, i, j, ...) {
     }
 
     i <- normalizeDoubleBracketSubscript(i, x)
-    ParquetColumnVector(x@path, column=x@columns[i])
+    ParquetColumnVector(x@query, column = names(x)[i])
 })
 
 #' @export
@@ -164,7 +175,7 @@ setMethod("replaceROWS", "ParquetDataFrame", function(x, i, value) {
 #' @importFrom S4Vectors normalizeSingleBracketReplacementValue
 setMethod("normalizeSingleBracketReplacementValue", "ParquetDataFrame", function(value, x) {
     if (is(value, "ParquetColumnVector")) {
-        return(new("ParquetDataFrame", path=value@seed@path, columns=value@seed@column, nrows=length(value)))
+        return(new("ParquetDataFrame", query = value@seed@query, nrows = length(value)))
     }
     callNextMethod()
 })
@@ -174,10 +185,11 @@ setMethod("normalizeSingleBracketReplacementValue", "ParquetDataFrame", function
 #' @importFrom S4Vectors replaceCOLS normalizeSingleBracketSubscript
 setMethod("replaceCOLS", "ParquetDataFrame", function(x, i, value) {
     xstub <- setNames(seq_along(x), names(x))
-    i2 <- normalizeSingleBracketSubscript(i, xstub, allow.NAs=TRUE)
-    if (length(i2) == 1L && !is.na(i2)) {
+    i2 <- normalizeSingleBracketSubscript(i, xstub, allow.NAs = TRUE)
+    if (!anyNA(i2)) {
         if (is(value, "ParquetDataFrame")) {
-            if (x@path == value@path && identical(x@columns[i2], value@columns)) {
+            if (identicalQueryBody(x@query, value@query)) {
+                x@query$selected_columns[i] <- value@query$selected_columns
                 return(x)
             }
         }
@@ -193,10 +205,11 @@ setMethod("replaceCOLS", "ParquetDataFrame", function(x, i, value) {
 #' @export
 #' @importFrom S4Vectors normalizeDoubleBracketSubscript
 setMethod("[[<-", "ParquetDataFrame", function(x, i, j, ..., value) {
-    i2 <- normalizeDoubleBracketSubscript(i, x, allow.nomatch=TRUE)
+    i2 <- normalizeDoubleBracketSubscript(i, x, allow.nomatch = TRUE)
     if (length(i2) == 1L && !is.na(i2)) {
         if (is(value, "ParquetColumnVector")) {
-            if (x@path == value@seed@path && x@columns[i2] == value@seed@column) {
+            if (identicalQueryBody(x@query, value@seed@query)) {
+                x@query$selected_columns[i] <- value@seed@query$selected_columns
                 return(x)
             }
         }
@@ -208,33 +221,48 @@ setMethod("[[<-", "ParquetDataFrame", function(x, i, j, ..., value) {
 })
 
 #' @export
+#' @importFrom dplyr rename
 #' @importFrom S4Vectors mcols make_zero_col_DFrame combineRows
-cbind.ParquetDataFrame <- function(..., deparse.level=1) {
+cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
     preserved <- TRUE
     all_columns <- character(0)
     objects <- list(...)
-    xpath <- NULL
+    xquery <- NULL
 
     for (i in seq_along(objects)) {
         obj <- objects[[i]]
         if (is(obj, "ParquetDataFrame")) {
-            if (is.null(xpath)) {
-                xpath <- obj@path
-            } else if (obj@path != xpath) {
+            all_columns <- c(all_columns, names(obj@query))
+            if (anyDuplicated(all_columns)) {
                 preserved <- FALSE
                 break
-            } 
-            all_columns <- c(all_columns, obj@columns)
+            }
 
+            if (is.null(xquery)) {
+                xquery <- obj@query
+            } else if (!identicalQueryBody(obj@query, xquery)) {
+                preserved <- FALSE
+                break
+            }
         } else if (is(obj, "ParquetColumnVector")) {
-            if (is.null(xpath)) {
-                xpath <- obj@seed@path
-            } else if (obj@seed@path != xpath || !identical(names(objects)[i], obj@seed@column)) {
+            cname <- names(objects)[i]
+            if (!is.null(cname)) {
+                obj@seed@query <- rename(obj@seed@query, !!!setNames(names(obj@seed@query), cname))
+                objects[[i]]@seed@query <- obj@seed@query
+            }
+
+            all_columns <- c(all_columns, names(obj@seed@query))
+            if (anyDuplicated(all_columns)) {
                 preserved <- FALSE
                 break
-            } 
-            all_columns <- c(all_columns, obj@seed@column)
+            }
 
+            if (is.null(xquery)) {
+                xquery <- obj@seed@query
+            } else if (!identicalQueryBody(obj@seed@query, xquery)) {
+                preserved <- FALSE
+                break
+            }
         } else {
             preserved <- FALSE
             break
@@ -249,8 +277,8 @@ cbind.ParquetDataFrame <- function(..., deparse.level=1) {
             }
         }
         do.call(cbind, objects)
-
     } else {
+        all_selected_columns <- list()
         all_mcols <- list()
         has_mcols <- FALSE
         all_metadata <- list()
@@ -258,10 +286,12 @@ cbind.ParquetDataFrame <- function(..., deparse.level=1) {
         for (i in seq_along(objects)) {
             obj <- objects[[i]]
 
+            sc <- NULL
             mc <- NULL
             md <- list()
-            if (is(obj, "DataFrame")) {
-                mc <- mcols(obj, use.names=FALSE)
+            if (is(obj, "ParquetDataFrame")) {
+                sc <- obj@query$selected_columns
+                mc <- mcols(obj, use.names = FALSE)
                 md <- metadata(obj)
                 if (is.null(mc)) {
                     mc <- make_zero_col_DFrame(length(obj))
@@ -269,12 +299,16 @@ cbind.ParquetDataFrame <- function(..., deparse.level=1) {
                     has_mcols <- TRUE
                 }
             } else {
+                sc <- obj@seed@query$selected_columns
                 mc <- make_zero_col_DFrame(1)
             }
 
+            all_selected_columns[[i]] <- sc
             all_mcols[[i]] <- mc
             all_metadata[[i]] <- md
         }
+
+        xquery$selected_columns <- do.call(c, all_selected_columns)
 
         if (has_mcols) {
             all_mcols <- do.call(combineRows, all_mcols)
@@ -283,11 +317,10 @@ cbind.ParquetDataFrame <- function(..., deparse.level=1) {
         }
 
         new("ParquetDataFrame", 
-            path=xpath,
-            columns=all_columns,
-            nrows=NROW(objects[[1]]),
-            elementMetadata=all_mcols,
-            metadata=do.call(c, all_metadata)
+            query = xquery,
+            nrows = NROW(objects[[1L]]),
+            elementMetadata = all_mcols,
+            metadata = do.call(c, all_metadata)
         )
     }
 }
@@ -299,27 +332,17 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 #' @importFrom S4Vectors make_zero_col_DFrame mcols mcols<- metadata metadata<-
 .collapse_to_df <- function(x) {
     df <- make_zero_col_DFrame(x@nrows)
-    for (i in seq_along(x@columns)) {
-        df[[as.character(i)]] <- ParquetColumnVector(x@path, column=x@columns[i])
+    for (i in names(x)) {
+        df[[i]] <- ParquetColumnVector(x@query, column = i)
     }
-    colnames(df) <- x@columns
-    mcols(df) <- mcols(x, use.names=FALSE)
+    mcols(df) <- mcols(x, use.names = FALSE)
     metadata(df) <- metadata(x)
     df
 }
 
 #' @export
 setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, optional = FALSE, ...) {
-    tab <- acquireTable(x@path)
-
-    ucol <- unique(x@columns)
-    is.same <- identical(x@columns, ucol)
-    tab <- tab[,ucol]
-
-    output <- as.data.frame(tab, row.names=row.names, optional=optional, ...)
-    output <- output[,match(x@columns,colnames(output)),drop=FALSE]
-
-    output
+    as.data.frame(x@query, row.names = row.names, optional = optional, ...)
 })
 
 #' @export

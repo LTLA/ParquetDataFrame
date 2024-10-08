@@ -41,17 +41,18 @@
 #' ParquetColumnSeed-class
 #' dim,ParquetColumnSeed-method
 #' type,ParquetColumnSeed-method
-#' path,ParquetColumnSeed-method
 #' extract_array,ParquetColumnSeed-method
 #' ParquetColumnVector-class
 #' DelayedArray,ParquetColumnSeed-method
+#'
+#' @include acquireDataset.R
 #'
 #' @name ParquetColumnSeed
 NULL
 
 #' @export
 #' @import methods
-setClass("ParquetColumnSeed", slots=c(path="character", column="character", length="integer", type="character"))
+setClass("ParquetColumnSeed", slots = c(query = "arrow_dplyr_query", length = "integer", type = "character"))
 
 #' @export
 setMethod("dim", "ParquetColumnSeed", function(x) x@length)
@@ -61,17 +62,12 @@ setMethod("dim", "ParquetColumnSeed", function(x) x@length)
 setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
 #' @export
-#' @importFrom BiocGenerics path
-setMethod("path", "ParquetColumnSeed", function(object) object@path)
-
-#' @export
 #' @importFrom DelayedArray extract_array
+#' @importFrom dplyr pull
 setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
-    tab <- acquireTable(x@path)
     slice <- index[[1]]
-
     if (is.null(slice)) {
-        output <- tab[[x@column]]$as_vector()
+        output <- pull(x@query, as_vector = TRUE)
     } else if (length(slice) == 0) {
         output <- logical()
     } else {
@@ -88,7 +84,7 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
             modified <- TRUE
         }
 
-        output <- tab[[x@column]]$Take(slice - 1L)$as_vector()
+        output <- pull(x@query, as_vector = FALSE)$Take(slice - 1L)$as_vector()
         if (modified) {
             m <- match(original, slice)
             output <- output[m]
@@ -104,22 +100,25 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 #' @export
 #' @rdname ParquetColumnSeed
 #' @importFrom DelayedArray type
-ParquetColumnSeed <- function(path, column, type=NULL, length=NULL, ...) {
-    if (is.null(type) || is.null(length)) {
-        tab <- acquireTable(path, ...)
-        if (is.null(type)){ 
-            col <- tab[[column]]
-            type <- DelayedArray::type(col$Slice(0,0)$as_vector())
-        }
-        if (is.null(length)) {
-            length <- nrow(tab)
-        }
+#' @importFrom dplyr select slice_head
+ParquetColumnSeed <- function(path, column, type = NULL, length = NULL, ...) {
+    if (inherits(path, "arrow_dplyr_query")) {
+        dat <- path
+    } else {
+        dat <- acquireDataset(path, ...)
+    }
+    query <- select(dat, !!column)
+    if (is.null(type)){
+        type <- DelayedArray::type(pull(slice_head(query, n = 0L), as_vector = TRUE))
+    }
+    if (is.null(length)) {
+        length <- nrow(dat)
     } 
-    new("ParquetColumnSeed", path=path, column=column, length=length, type=type)
+    new("ParquetColumnSeed", query = query, length = length, type = type)
 }
 
 #' @export
-setClass("ParquetColumnVector", contains="DelayedArray", slots=c(seed="ParquetColumnSeed"))
+setClass("ParquetColumnVector", contains = "DelayedArray", slots = c(seed = "ParquetColumnSeed"))
 
 #' @export
 #' @importFrom DelayedArray DelayedArray
@@ -127,9 +126,9 @@ setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVecto
 
 #' @export
 #' @rdname ParquetColumnSeed
-ParquetColumnVector <- function(x, column, type=NULL, length=NULL, ...) {
+ParquetColumnVector <- function(x, column, type = NULL, length = NULL, ...) {
     if (!is(x, "ParquetColumnSeed")) {
-        x <- ParquetColumnSeed(x, column=column, type=type, length=length, ...)
+        x <- ParquetColumnSeed(x, column = column, type = type, length = length, ...)
     }
-    new("ParquetColumnVector", seed=x)
+    new("ParquetColumnVector", seed = x)
 }

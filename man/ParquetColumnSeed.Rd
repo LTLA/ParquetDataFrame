@@ -5,7 +5,6 @@
 \alias{ParquetColumnSeed-class}
 \alias{dim,ParquetColumnSeed-method}
 \alias{type,ParquetColumnSeed-method}
-\alias{path,ParquetColumnSeed-method}
 \alias{extract_array,ParquetColumnSeed-method}
 \alias{ParquetColumnVector-class}
 \alias{DelayedArray,ParquetColumnSeed-method}
