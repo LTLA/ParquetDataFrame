@@ -154,7 +154,7 @@ test_that("rbinding collapses to an ordinary DFrame", {
 
 test_that("cbinding may or may not collapse to an ordinary DFrame", {
     # Same path, we get another PDF.
-    copy <- cbind(x, foo=x[["carb"]])
+    copy <- cbind(x, foo=x[["age"]])
     expect_s4_class(copy, "ParquetDataFrame")
     expect_identical(colnames(copy), c(colnames(example_df), "foo"))
 
@@ -176,19 +176,19 @@ test_that("cbinding may or may not collapse to an ordinary DFrame", {
     expect_identical(colnames(copy), rep(colnames(x), 2))
 
     # Duplicate names causes collapse.
-    copy <- cbind(x, carb=x[["carb"]])
+    copy <- cbind(x, age=x[["age"]])
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(example_df), "carb"))
+    expect_identical(colnames(copy), c(colnames(example_df), "age"))
 
     # Duplicate names causes collapse.
-    copy <- cbind(carb=x[["carb"]], x)
+    copy <- cbind(age=x[["age"]], x)
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c("carb", colnames(example_df)))
+    expect_identical(colnames(copy), c("age", colnames(example_df)))
 
     # Different paths causes collapse.
-    copy <- cbind(x, carb=x2[["carb"]])
+    copy <- cbind(x, age=x2[["age"]])
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(example_df), "carb"))
+    expect_identical(colnames(copy), c(colnames(example_df), "age"))
 })
 
 test_that("cbinding carries forward any metadata", {
