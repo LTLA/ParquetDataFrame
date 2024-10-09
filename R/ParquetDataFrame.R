@@ -264,26 +264,20 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
         }
         do.call(cbind, objects)
     } else {
-        all_selected_columns <- list()
-        all_mcols <- list()
+        all_selected_columns <- vector("list", length(objects))
+        all_mcols <- vector("list", length(objects))
+        all_metadata <- vector("list", length(objects))
         has_mcols <- FALSE
-        all_metadata <- list()
 
         for (i in seq_along(objects)) {
             obj <- objects[[i]]
 
-            mc <- NULL
             md <- list()
+            mc <- make_zero_col_DFrame(NCOL(obj))
             if (is(obj, "ParquetDataFrame")) {
-                mc <- mcols(obj, use.names = FALSE)
+                mc <- mcols(obj, use.names = FALSE) %||% mc
+                has_mcols <- has_mcols || (ncol(mc) > 0L)
                 md <- metadata(obj)
-                if (is.null(mc)) {
-                    mc <- make_zero_col_DFrame(length(obj))
-                } else {
-                    has_mcols <- TRUE
-                }
-            } else {
-                mc <- make_zero_col_DFrame(1)
             }
 
             all_selected_columns[[i]] <- query(obj)$selected_columns
