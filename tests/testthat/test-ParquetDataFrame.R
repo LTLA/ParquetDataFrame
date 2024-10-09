@@ -158,32 +158,32 @@ test_that("cbinding may or may not collapse to an ordinary DFrame", {
     expect_s4_class(copy, "ParquetDataFrame")
     expect_identical(colnames(copy), c(colnames(example_df), "foo"))
 
-    # Different paths causes collapse.
-    tmp <- tempfile()
-    file.symlink(example_path, tmp)
-    x2 <- ParquetDataFrame(tmp)
-    copy <- cbind(x, x2)
-    expect_s4_class(copy, "DFrame")
+    # Duplicate names causes unique renaming.
+    copy <- cbind(x, x)
+    expect_s4_class(copy, "ParquetDataFrame")
+    expect_identical(colnames(copy), make.unique(rep(colnames(x), 2), sep="_"))
+
+    # Duplicate names causes unique renaming.
+    copy <- cbind(x, age=x[["age"]])
+    expect_s4_class(copy, "ParquetDataFrame")
+    expect_identical(colnames(copy), c(colnames(example_df), "age_1"))
+
+    # Duplicate names causes unique renaming.
+    copy <- cbind(age=x[["age"]], x)
+    expect_s4_class(copy, "ParquetDataFrame")
+    expect_identical(colnames(copy), make.unique(c("age", colnames(example_df)), sep="_"))
 
     # Different DataFrame class causes collapse.
     copy <- cbind(x, example_df)
     expect_s4_class(copy, "DFrame")
     expect_identical(colnames(copy), rep(colnames(example_df), 2))
 
-    # Duplicate names causes collapse.
-    copy <- cbind(x, x)
+    # Different paths causes collapse.
+    tmp <- tempfile()
+    file.symlink(example_path, tmp)
+    x2 <- ParquetDataFrame(tmp)
+    copy <- cbind(x, x2)
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), rep(colnames(x), 2))
-
-    # Duplicate names causes collapse.
-    copy <- cbind(x, age=x[["age"]])
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(example_df), "age"))
-
-    # Duplicate names causes collapse.
-    copy <- cbind(age=x[["age"]], x)
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c("age", colnames(example_df)))
 
     # Different paths causes collapse.
     copy <- cbind(x, age=x2[["age"]])

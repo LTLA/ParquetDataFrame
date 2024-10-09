@@ -229,7 +229,6 @@ setMethod("[[<-", "ParquetDataFrame", function(x, i, j, ..., value) {
 #' @importFrom S4Vectors mcols make_zero_col_DFrame combineRows
 cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
     preserved <- TRUE
-    all_columns <- character(0)
     objects <- list(...)
     xquery <- NULL
 
@@ -242,12 +241,6 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
                     obj@seed@query <- rename(query(obj), !!!setNames(names(query(obj)), cname))
                     objects[[i]]@seed@query <- query(obj)
                 }
-            }
-
-            all_columns <- c(all_columns, names(query(obj)))
-            if (anyDuplicated(all_columns)) {
-                preserved <- FALSE
-                break
             }
 
             if (is.null(xquery)) {
@@ -279,7 +272,6 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
         for (i in seq_along(objects)) {
             obj <- objects[[i]]
 
-            sc <- NULL
             mc <- NULL
             md <- list()
             if (is(obj, "ParquetDataFrame")) {
@@ -299,10 +291,13 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
             all_metadata[[i]] <- md
         }
 
-        xquery$selected_columns <- do.call(c, all_selected_columns)
+        cols <- do.call(c, all_selected_columns)
+        names(cols) <- make.unique(names(cols), sep = "_")
+        xquery$selected_columns <- cols
 
         if (has_mcols) {
             all_mcols <- do.call(combineRows, all_mcols)
+            rownames(all_mcols) <- names(cols)
         } else {
             all_mcols <- NULL
         }
