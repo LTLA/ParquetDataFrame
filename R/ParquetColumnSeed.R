@@ -40,10 +40,12 @@
 #' @aliases
 #' ParquetColumnSeed-class
 #' dim,ParquetColumnSeed-method
+#' Math,ParquetColumnSeed-method
 #' type,ParquetColumnSeed-method
+#' DelayedArray,ParquetColumnSeed-method
 #' extract_array,ParquetColumnSeed-method
 #' ParquetColumnVector-class
-#' DelayedArray,ParquetColumnSeed-method
+#' Math,ParquetColumnVector-method
 #'
 #' @include query.R
 #' @include acquireDataset.R
@@ -62,8 +64,41 @@ setMethod("query", "ParquetColumnSeed", function(x) x@query)
 setMethod("dim", "ParquetColumnSeed", function(x) x@length)
 
 #' @export
+#' @importFrom dplyr mutate
+setMethod("Math", "ParquetColumnSeed", function(x) {
+    query <- query(x)
+    name <- as.name(names(query))
+    query <-
+      switch(.Generic,
+             abs = mutate(query, x = abs(!!name)),
+             sign = mutate(query, x = sign(!!name)),
+             sqrt = mutate(query, x = sqrt(!!name)),
+             ceiling = mutate(query, x = ceiling(!!name)),
+             floor = mutate(query, x = floor(!!name)),
+             trunc = mutate(query, x = trunc(!!name)),
+             log = mutate(query, x = log(!!name)),
+             log10 = mutate(query, x = log10(!!name)),
+             log2 = mutate(query, x = log2(!!name)),
+             log1p = mutate(query, x = log1p(!!name)),
+             acos = mutate(query, x = acos(!!name)),
+             asin = mutate(query, x = asin(!!name)),
+             exp = mutate(query, x = exp(!!name)),
+             cos = mutate(query, x = cos(!!name)),
+             sin = mutate(query, x = sin(!!name)),
+             tan = mutate(query, x = tan(!!name)),
+             stop("unsupported Math operator: ", .Generic))
+    query <- select(query, x)
+    type <- DelayedArray::type(pull(slice_head(query, n = 0L), as_vector = TRUE))
+    initialize(x, query = query, type = type)
+})
+
+#' @export
 #' @importFrom DelayedArray type
 setMethod("type", "ParquetColumnSeed", function(x) x@type)
+
+#' @export
+#' @importFrom DelayedArray DelayedArray
+setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVector(seed))
 
 #' @export
 #' @importFrom DelayedArray extract_array
@@ -102,10 +137,6 @@ setMethod("extract_array", "ParquetColumnSeed", function(x, index) {
 })
 
 #' @export
-#' @importFrom DelayedArray DelayedArray
-setMethod("DelayedArray", "ParquetColumnSeed", function(seed) ParquetColumnVector(seed))
-
-#' @export
 #' @rdname ParquetColumnSeed
 #' @importFrom DelayedArray type
 #' @importFrom dplyr select slice_head
@@ -131,6 +162,9 @@ setClass("ParquetColumnVector", contains = "DelayedArray", slots = c(seed = "Par
 #' @export
 #' @importFrom DelayedArray seed
 setMethod("query", "ParquetColumnVector", function(x) query(seed(x)))
+
+#' @export
+setMethod("Math", "ParquetColumnVector", function(x) initialize(x, seed = callGeneric(seed(x))))
 
 #' @export
 #' @rdname ParquetColumnSeed

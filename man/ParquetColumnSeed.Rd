@@ -4,10 +4,12 @@
 \alias{ParquetColumnSeed}
 \alias{ParquetColumnSeed-class}
 \alias{dim,ParquetColumnSeed-method}
+\alias{Math,ParquetColumnSeed-method}
 \alias{type,ParquetColumnSeed-method}
+\alias{DelayedArray,ParquetColumnSeed-method}
 \alias{extract_array,ParquetColumnSeed-method}
 \alias{ParquetColumnVector-class}
-\alias{DelayedArray,ParquetColumnSeed-method}
+\alias{Math,ParquetColumnVector-method}
 \alias{ParquetColumnVector}
 \title{Column of a Parquet file}
 \usage{

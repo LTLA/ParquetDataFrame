@@ -2,6 +2,7 @@
 # library(testthat); library(ParquetDataFrame); source("setup.R"); source("test-ParquetColumnSeed.R")
 
 stratum <- DelayedArray(ParquetColumnSeed(example_path, column="stratum"))
+age <- DelayedArray(ParquetColumnSeed(example_path, column="age"))
 case <- DelayedArray(ParquetColumnSeed(example_path, column="case"))
 education <- DelayedArray(ParquetColumnSeed(example_path, column="education"))
 
@@ -42,4 +43,97 @@ test_that("extraction methods work as expected for a ParquetColumnSeed", {
     expect_identical(as.vector(extract_array(stratum, list(keep))), example_df$stratum[keep])
     expect_identical(as.vector(extract_array(case, list(keep))), example_df$case[keep])
     expect_identical(as.vector(extract_array(education, list(keep))), example_df$education[keep])
+})
+
+test_that("Math methods work as expected for a ParquetColumnVector", {
+    x <- abs(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), abs(as.vector(age)))
+
+    x <- sign(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), sign(as.vector(age)))
+
+    x <- sqrt(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), sqrt(as.vector(age)))
+
+    x <- ceiling(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), ceiling(as.vector(age)))
+
+    x <- floor(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), floor(as.vector(age)))
+
+    x <- trunc(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), trunc(as.vector(age)))
+
+    expect_error(cummax(age))
+    expect_error(cummin(age))
+    expect_error(cumprod(age))
+    expect_error(cumsum(age))
+
+    x <- log(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), log(as.vector(age)))
+
+    x <- log10(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), log10(as.vector(age)))
+
+    x <- log2(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), log2(as.vector(age)))
+
+    x <- log1p(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), log1p(as.vector(age)))
+
+    x <- acos(case)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), acos(as.vector(case)))
+
+    expect_error(acosh(age))
+
+    x <- asin(case)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), asin(as.vector(case)))
+
+    expect_error(asinh(age))
+    expect_error(atan(age))
+    expect_error(atanh(age))
+
+    x <- exp(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), exp(as.vector(age)))
+
+    expect_error(expm1(age))
+
+    x <- cos(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), cos(as.vector(age)))
+
+    expect_error(cosh(age))
+    expect_error(cospi(age))
+
+    x <- sin(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), sin(as.vector(age)))
+
+    expect_error(sinh(age))
+    expect_error(sinpi(age))
+
+    x <- tan(age)
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), tan(as.vector(age)))
+
+    expect_error(tanh(age))
+    expect_error(tanpi(age))
+
+    expect_error(gamma(age))
+    expect_error(lgamma(age))
+    expect_error(digamma(age))
+    expect_error(trigamma(age))
 })
