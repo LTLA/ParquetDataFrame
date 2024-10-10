@@ -81,7 +81,15 @@ test_that("extraction of a column yields a ParquetColumnVector", {
     expect_identical(as.vector(col), example_df[[nm]])
 })
 
-test_that("slicing by rows collapses to an ordinary DFrame", {
+test_that("conditional slicing by rows preserves type of a ParquetDataFrame", {
+    i <- x$age > 30
+    copy <- x[i,]
+    expect_s4_class(copy, "ParquetDataFrame")
+    expect_identical(colnames(copy), colnames(example_df))
+    expect_identical(as.vector(copy[[1]]), example_df[[1]][as.vector(i)])
+})
+
+test_that("positional slicing by rows collapses to an ordinary DFrame", {
     i <- sample(nrow(x))
     copy <- x[i,]
     expect_s4_class(copy, "DFrame")

@@ -125,13 +125,21 @@ setReplaceMethod("names", "ParquetDataFrame", function(x, value) {
 })
 
 #' @export
+#' @importFrom dplyr filter
 #' @importFrom S4Vectors extractROWS
 setMethod("extractROWS", "ParquetDataFrame", function(x, i) {
     if (missing(i)) {
-        return(x)
+        x
+    } else if (is(i, "ParquetColumnVector") &&
+               (seed(i)@type == "logical") &&
+               identicalQueryBody(query(x), query(i))) {
+        keep <- query(i)$selected_columns[[1L]]
+        query <- filter(query(x), !!keep)
+        initialize(x, query = query, nrows = nrow(query))
+    } else {
+        collapsed <- .collapse_to_df(x)
+        extractROWS(collapsed, i)
     }
-    collapsed <- .collapse_to_df(x)
-    extractROWS(collapsed, i)
 })
 
 #' @export
