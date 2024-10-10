@@ -14,11 +14,12 @@ Authors@R:
     )
 License: MIT + file LICENSE
 Depends:
-    DelayedArray,
+    DelayedArray (>= 0.31.8),
     S4Vectors
 Imports: 
     stats,
     methods,
+    BiocGenerics (>= 0.51.2),
     arrow,
     dplyr
 Suggests:

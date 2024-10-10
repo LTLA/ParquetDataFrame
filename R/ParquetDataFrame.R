@@ -85,6 +85,7 @@ ParquetDataFrame <- function(path, ...) {
 }
 
 #' @export
+#' @importClassesFrom S4Vectors DataFrame
 setClass("ParquetDataFrame", contains = "DataFrame", slots = c(query = "arrow_dplyr_query", nrows = "integer"))
 
 #' @export
@@ -370,4 +371,5 @@ setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, opt
 })
 
 #' @export
+#' @importClassesFrom S4Vectors DFrame
 setAs("ParquetDataFrame", "DFrame", function(from) .collapse_to_df(from))

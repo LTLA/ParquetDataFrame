@@ -66,7 +66,8 @@ NULL
 
 #' @export
 #' @import methods
-setClass("ParquetColumnSeed", slots = c(query = "arrow_dplyr_query", length = "integer", type = "character"))
+#' @importClassesFrom BiocGenerics OutOfMemoryObject
+setClass("ParquetColumnSeed", contains = "OutOfMemoryObject", slots = c(query = "arrow_dplyr_query", length = "integer", type = "character"))
 
 #' @export
 setMethod("query", "ParquetColumnSeed", function(x) x@query)
@@ -269,6 +270,7 @@ ParquetColumnSeed <- function(path, column, type = NULL, length = NULL, ...) {
 }
 
 #' @export
+#' @importClassesFrom DelayedArray DelayedArray
 setClass("ParquetColumnVector", contains = "DelayedArray", slots = c(seed = "ParquetColumnSeed"))
 
 #' @export
