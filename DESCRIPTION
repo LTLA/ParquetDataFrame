@@ -18,7 +18,6 @@ Depends:
     S4Vectors
 Imports: 
     stats,
-    utils,
     methods,
     arrow,
     dplyr

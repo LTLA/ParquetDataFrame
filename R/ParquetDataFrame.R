@@ -45,6 +45,7 @@
 #' @aliases
 #' ParquetDataFrame-class
 #'
+#' show,ParquetDataFrame-method
 #' nrow,ParquetDataFrame-method
 #' ncol,ParquetDataFrame-method
 #' length,ParquetDataFrame-method
@@ -55,6 +56,8 @@
 #' names<-,ParquetDataFrame-method
 #'
 #' extractROWS,ParquetDataFrame,ANY-method
+#' head,ParquetDataFrame-method
+#' tail,ParquetDataFrame-method
 #' extractCOLS,ParquetDataFrame-method
 #' [[,ParquetDataFrame-method
 #'
@@ -83,6 +86,15 @@ ParquetDataFrame <- function(path, ...) {
 
 #' @export
 setClass("ParquetDataFrame", contains = "DataFrame", slots = c(query = "arrow_dplyr_query", nrows = "integer"))
+
+#' @export
+#' @importFrom S4Vectors get_showTailLines set_showTailLines
+setMethod("show", "ParquetDataFrame", function(object) {
+    ntail <- get_showTailLines()
+    on.exit(set_showTailLines(ntail))
+    set_showTailLines(0L)
+    callNextMethod()
+})
 
 #' @export
 setMethod("query", "ParquetDataFrame", function(x) x@query)
@@ -143,6 +155,30 @@ setMethod("extractROWS", "ParquetDataFrame", function(x, i) {
 })
 
 #' @export
+#' @importFrom S4Vectors head isSingleNumber
+setMethod("head", "ParquetDataFrame", function(x, n = 6L, ...) {
+    if (!isSingleNumber(n)) {
+        stop("'n' must be a single number")
+    }
+    n <- as.integer(n)
+    if (n < 0) {
+        n <- max(0L, nrow(x) + n)
+    }
+    if (n > nrow(x)) {
+        x
+    } else {
+        initialize(x, query = head(query(x), n), nrows = n)
+    }
+})
+
+#' @export
+#' @importFrom S4Vectors isSingleNumber tail
+setMethod("tail", "ParquetDataFrame", function(x, n = 6L, ...) {
+    x <- .collapse_to_df(x)
+    callNextMethod()
+})
+
+#' @export
 #' @importFrom stats setNames
 #' @importFrom S4Vectors extractCOLS mcols normalizeSingleBracketSubscript
 setMethod("extractCOLS", "ParquetDataFrame", function(x, i) {
@@ -173,7 +209,7 @@ setMethod("[[", "ParquetDataFrame", function(x, i, j, ...) {
     }
 
     i <- normalizeDoubleBracketSubscript(i, x)
-    ParquetColumnVector(query(x), column = names(x)[i])
+    ParquetColumnVector(query(x), column = names(x)[i], length = nrow(x))
 })
 
 #' @export
@@ -319,9 +355,9 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 
 #' @importFrom S4Vectors make_zero_col_DFrame mcols mcols<- metadata metadata<-
 .collapse_to_df <- function(x) {
-    df <- make_zero_col_DFrame(x@nrows)
+    df <- make_zero_col_DFrame(nrow(x))
     for (i in names(x)) {
-        df[[i]] <- ParquetColumnVector(query(x), column = i)
+        df[[i]] <- ParquetColumnVector(query(x), column = i, length = nrow(x))
     }
     mcols(df) <- mcols(x, use.names = FALSE)
     metadata(df) <- metadata(x)

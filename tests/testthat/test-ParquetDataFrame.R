@@ -97,6 +97,20 @@ test_that("positional slicing by rows collapses to an ordinary DFrame", {
     expect_identical(as.vector(copy[[1]]), example_df[[1]][i])
 })
 
+test_that("head preserves type of a ParquetDataFrame", {
+    copy <- head(x, 20)
+    expect_s4_class(copy, "ParquetDataFrame")
+    expect_identical(colnames(copy), colnames(example_df))
+    expect_identical(as.data.frame(copy), head(example_df, 20))
+})
+
+test_that("tail collapses to an ordinary DFrame", {
+    copy <- tail(x, 20)
+    expect_s4_class(copy, "DFrame")
+    expect_identical(colnames(copy), colnames(example_df))
+    expect_identical(as.vector(copy[[1]]), tail(example_df[[1]], 20))
+})
+
 test_that("subset assignments that collapse to an ordinary DFrame", {
     copy <- x
     copy[1:5,] <- copy[9:13,]

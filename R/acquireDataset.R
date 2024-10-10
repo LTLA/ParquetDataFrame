@@ -42,8 +42,7 @@ persistent$handles <- list()
 #' @export
 #' @importFrom arrow as_arrow_table
 #' @importFrom arrow open_dataset
-#' @importFrom S4Vectors isSingleString
-#' @importFrom utils tail
+#' @importFrom S4Vectors isSingleString tail
 acquireDataset <- function(path, ...) {
     if (!(isSingleString(path) && nzchar(path))) {
         stop("'path' must be a single non-empty string")

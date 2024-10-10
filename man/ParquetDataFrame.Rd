@@ -3,6 +3,7 @@
 \name{ParquetDataFrame}
 \alias{ParquetDataFrame}
 \alias{ParquetDataFrame-class}
+\alias{show,ParquetDataFrame-method}
 \alias{nrow,ParquetDataFrame-method}
 \alias{ncol,ParquetDataFrame-method}
 \alias{length,ParquetDataFrame-method}
@@ -11,6 +12,8 @@
 \alias{rownames<-,ParquetDataFrame-method}
 \alias{names<-,ParquetDataFrame-method}
 \alias{extractROWS,ParquetDataFrame,ANY-method}
+\alias{head,ParquetDataFrame-method}
+\alias{tail,ParquetDataFrame-method}
 \alias{extractCOLS,ParquetDataFrame-method}
 \alias{[[,ParquetDataFrame-method}
 \alias{replaceROWS,ParquetDataFrame-method}
