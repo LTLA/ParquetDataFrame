@@ -40,11 +40,21 @@
 #' @aliases
 #' ParquetColumnSeed-class
 #' dim,ParquetColumnSeed-method
+#' Arith,ParquetColumnSeed,ParquetColumnSeed-method
+#' Arith,ParquetColumnSeed,numeric-method
+#' Arith,numeric,ParquetColumnSeed-method
+#' Compare,ParquetColumnSeed,ParquetColumnSeed-method
+#' Compare,ParquetColumnSeed,vector-method
+#' Compare,vector,ParquetColumnSeed-method
+#' Logic,ParquetColumnSeed,ParquetColumnSeed-method
 #' Math,ParquetColumnSeed-method
 #' type,ParquetColumnSeed-method
 #' DelayedArray,ParquetColumnSeed-method
 #' extract_array,ParquetColumnSeed-method
 #' ParquetColumnVector-class
+#' Ops,ParquetColumnVector,ParquetColumnVector-method
+#' Ops,ParquetColumnVector,numeric-method
+#' Ops,numeric,ParquetColumnVector-method
 #' Math,ParquetColumnVector-method
 #'
 #' @include query.R
@@ -62,6 +72,107 @@ setMethod("query", "ParquetColumnSeed", function(x) x@query)
 
 #' @export
 setMethod("dim", "ParquetColumnSeed", function(x) x@length)
+
+#' @importFrom dplyr mutate
+.Arith.ParquetColumnSeed <- function(.Generic, query, v1, v2, length) {
+    query <- switch(.Generic,
+                    "+" = mutate(query, x = `+`(!!v1, !!v2)),
+                    "-" = mutate(query, x = `-`(!!v1, !!v2)),
+                    "*" = mutate(query, x = `*`(!!v1, !!v2)),
+                    "/" = mutate(query, x = `/`(!!v1, !!v2)),
+                    "^" = mutate(query, x = `^`(!!v1, !!v2)),
+                    "%%" = mutate(query, x = `%%`(!!v1, !!v2)),
+                    "%/%" = mutate(query, x = `%/%`(!!v1, !!v2)))
+    query <- select(query, "x")
+    type <- DelayedArray::type(pull(slice_head(query, n = 0L), as_vector = TRUE))
+    new("ParquetColumnSeed", query = query, type = type, length = length)
+}
+
+#' @export
+setMethod("Arith", c(e1 = "ParquetColumnSeed", e2 = "ParquetColumnSeed"), function(e1, e2) {
+    df <- cbind.ParquetDataFrame(x = ParquetColumnVector(e1), y = ParquetColumnVector(e2))
+    query <- query(df)
+    .Arith.ParquetColumnSeed(.Generic, query = query, v1 = as.name("x"), v2 = as.name("y"),
+                             length = e1@length)
+})
+
+#' @export
+setMethod("Arith", c(e1 = "ParquetColumnSeed", e2 = "numeric"), function(e1, e2) {
+    if (length(e2) != 1) {
+        stop("can only perform arithmetic operations with a scalar value")
+    }
+    query <- query(e1)
+    name <- as.name(names(query))
+    .Arith.ParquetColumnSeed(.Generic, query = query, v1 = name, v2 = e2, length = e1@length)
+})
+
+#' @export
+setMethod("Arith", c(e1 = "numeric", e2 = "ParquetColumnSeed"), function(e1, e2) {
+    if (length(e1) != 1) {
+        stop("can only perform arithmetic operations with a scalar value")
+    }
+    query <- query(e2)
+    name <- as.name(names(query))
+    .Arith.ParquetColumnSeed(.Generic, query = query, v1 = e1, v2 = name, length = e2@length)
+})
+
+#' @importFrom dplyr mutate
+.Compare.ParquetColumnSeed <- function(.Generic, query, v1, v2, length) {
+    query <- switch(.Generic,
+                    "==" = mutate(query, x = `==`(!!v1, !!v2)),
+                    ">" = mutate(query, x = `>`(!!v1, !!v2)),
+                    "<" = mutate(query, x = `<`(!!v1, !!v2)),
+                    "!=" = mutate(query, x = `!=`(!!v1, !!v2)),
+                    "<=" = mutate(query, x = `<=`(!!v1, !!v2)),
+                    ">=" = mutate(query, x = `>=`(!!v1, !!v2)))
+    query <- select(query, "x")
+    new("ParquetColumnSeed", query = query, type = "logical", length = length)
+}
+
+#' @export
+setMethod("Compare", c(e1 = "ParquetColumnSeed", e2 = "ParquetColumnSeed"), function(e1, e2) {
+    df <- cbind.ParquetDataFrame(x = ParquetColumnVector(e1), y = ParquetColumnVector(e2))
+    query <- query(df)
+    .Compare.ParquetColumnSeed(.Generic, query = query, v1 = as.name("x"), v2 = as.name("y"),
+                               length = e1@length)
+})
+
+#' @export
+setMethod("Compare", c(e1 = "ParquetColumnSeed", e2 = "vector"), function(e1, e2) {
+    if (length(e2) != 1) {
+        stop("can only perform comparison operations with a scalar value")
+    }
+    query <- query(e1)
+    name <- as.name(names(query))
+    .Compare.ParquetColumnSeed(.Generic, query = query, v1 = name, v2 = e2, length = e1@length)
+})
+
+#' @export
+setMethod("Compare", c(e1 = "vector", e2 = "ParquetColumnSeed"), function(e1, e2) {
+    if (length(e1) != 1) {
+        stop("can only perform comparison operations with a scalar value")
+    }
+    query <- query(e2)
+    name <- as.name(names(query))
+    .Compare.ParquetColumnSeed(.Generic, query = query, v1 = e1, v2 = name, length = e2@length)
+})
+
+#' @importFrom dplyr mutate
+.Logic.ParquetColumnSeed <- function(.Generic, query, v1, v2, length) {
+    query <- switch(.Generic,
+                    "&" = mutate(query, x = `&`(!!v1, !!v2)),
+                    "|" = mutate(query, x = `|`(!!v1, !!v2)))
+    query <- select(query, "x")
+    new("ParquetColumnSeed", query = query, type = "logical", length = length)
+}
+
+#' @export
+setMethod("Logic", c(e1 = "ParquetColumnSeed", e2 = "ParquetColumnSeed"), function(e1, e2) {
+    df <- cbind.ParquetDataFrame(x = ParquetColumnVector(e1), y = ParquetColumnVector(e2))
+    query <- query(df)
+    .Logic.ParquetColumnSeed(.Generic, query = query, v1 = as.name("x"), v2 = as.name("y"),
+                             length = e1@length)
+})
 
 #' @export
 #' @importFrom dplyr mutate
@@ -162,6 +273,36 @@ setClass("ParquetColumnVector", contains = "DelayedArray", slots = c(seed = "Par
 #' @export
 #' @importFrom DelayedArray seed
 setMethod("query", "ParquetColumnVector", function(x) query(seed(x)))
+
+#' @export
+setMethod("Ops", c(e1 = "ParquetColumnVector", e2 = "ParquetColumnVector"), function(e1, e2) {
+    seed <- try(callGeneric(seed(e1), seed(e2)), silent = TRUE)
+    if (inherits(seed, "try-error")) {
+        callNextMethod()
+    } else {
+        new("ParquetColumnVector", seed = seed)
+    }
+})
+
+#' @export
+setMethod("Ops", c(e1 = "ParquetColumnVector", e2 = "numeric"), function(e1, e2) {
+    seed <- try(callGeneric(seed(e1), e2), silent = TRUE)
+    if (inherits(seed, "try-error")) {
+        callNextMethod()
+    } else {
+        new("ParquetColumnVector", seed = seed)
+    }
+})
+
+#' @export
+setMethod("Ops", c(e1 = "numeric", e2 = "ParquetColumnVector"), function(e1, e2) {
+    seed <- try(callGeneric(e1, seed(e2)), silent = TRUE)
+    if (inherits(seed, "try-error")) {
+        callNextMethod()
+    } else {
+        new("ParquetColumnVector", seed = seed)
+    }
+})
 
 #' @export
 setMethod("Math", "ParquetColumnVector", function(x) initialize(x, seed = callGeneric(seed(x))))

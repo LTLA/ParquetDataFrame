@@ -4,11 +4,21 @@
 \alias{ParquetColumnSeed}
 \alias{ParquetColumnSeed-class}
 \alias{dim,ParquetColumnSeed-method}
+\alias{Arith,ParquetColumnSeed,ParquetColumnSeed-method}
+\alias{Arith,ParquetColumnSeed,numeric-method}
+\alias{Arith,numeric,ParquetColumnSeed-method}
+\alias{Compare,ParquetColumnSeed,ParquetColumnSeed-method}
+\alias{Compare,ParquetColumnSeed,vector-method}
+\alias{Compare,vector,ParquetColumnSeed-method}
+\alias{Logic,ParquetColumnSeed,ParquetColumnSeed-method}
 \alias{Math,ParquetColumnSeed-method}
 \alias{type,ParquetColumnSeed-method}
 \alias{DelayedArray,ParquetColumnSeed-method}
 \alias{extract_array,ParquetColumnSeed-method}
 \alias{ParquetColumnVector-class}
+\alias{Ops,ParquetColumnVector,ParquetColumnVector-method}
+\alias{Ops,ParquetColumnVector,numeric-method}
+\alias{Ops,numeric,ParquetColumnVector-method}
 \alias{Math,ParquetColumnVector-method}
 \alias{ParquetColumnVector}
 \title{Column of a Parquet file}

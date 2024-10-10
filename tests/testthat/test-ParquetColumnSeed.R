@@ -3,7 +3,9 @@
 
 stratum <- DelayedArray(ParquetColumnSeed(example_path, column="stratum"))
 age <- DelayedArray(ParquetColumnSeed(example_path, column="age"))
+induced <- DelayedArray(ParquetColumnSeed(example_path, column="induced"))
 case <- DelayedArray(ParquetColumnSeed(example_path, column="case"))
+spontaneous <- DelayedArray(ParquetColumnSeed(example_path, column="spontaneous"))
 education <- DelayedArray(ParquetColumnSeed(example_path, column="education"))
 
 test_that("basic methods work as expected for a ParquetColumnSeed", {
@@ -43,6 +45,299 @@ test_that("extraction methods work as expected for a ParquetColumnSeed", {
     expect_identical(as.vector(extract_array(stratum, list(keep))), example_df$stratum[keep])
     expect_identical(as.vector(extract_array(case, list(keep))), example_df$case[keep])
     expect_identical(as.vector(extract_array(education, list(keep))), example_df$education[keep])
+})
+
+test_that("Arith methods work as expected for a ParquetColumnVector", {
+    ## "+"
+    x <- age + stratum
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) + as.vector(stratum))
+
+    x <- age + 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) + 1L)
+
+    x <- age + 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) + 3.14)
+
+    x <- 1L + age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L + as.vector(age))
+
+    x <- 3.14 + age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 + as.vector(age))
+
+    ## "-"
+    x <- age - stratum
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) - as.vector(stratum))
+
+    x <- age - 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) - 1L)
+
+    x <- age - 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) - 3.14)
+
+    x <- 1L - age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L - as.vector(age))
+
+    x <- 3.14 - age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 - as.vector(age))
+
+    ## "*"
+    x <- age * stratum
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) * as.vector(stratum))
+
+    x <- age * 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) * 1L)
+
+    x <- age * 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) * 3.14)
+
+    x <- 1L * age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L * as.vector(age))
+
+    x <- 3.14 * age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 * as.vector(age))
+
+    ## "/"
+    x <- age / stratum
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) / as.vector(stratum))
+
+    x <- age / 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) / 1L)
+
+    x <- age / 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) / 3.14)
+
+    x <- 1L / age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L / as.vector(age))
+
+    x <- 3.14 / age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 / as.vector(age))
+
+    ## "^"
+    x <- age ^ stratum
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) ^ as.vector(stratum))
+
+    x <- age ^ 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) ^ 1L)
+
+    x <- age ^ 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) ^ 3.14)
+
+    x <- 1L ^ age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L ^ as.vector(age))
+
+    x <- 3.14 ^ age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 ^ as.vector(age))
+
+    ## "%%"
+    x <- age %% stratum
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) %% as.vector(stratum))
+
+    x <- age %% 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) %% 1L)
+
+    x <- age %% 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) %% 3.14)
+
+    x <- 1L %% age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L %% as.vector(age))
+
+    x <- 3.14 %% age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 %% as.vector(age))
+
+    ## "%/%"
+    x <- age %/% stratum
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) %/% as.vector(stratum))
+
+    x <- age %/% 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) %/% 1L)
+
+    x <- age %/% 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(age) %/% 3.14)
+
+    x <- 1L %/% age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L %/% as.vector(age))
+
+    x <- 3.14 %/% age
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 %/% as.vector(age))
+})
+
+test_that("Compare methods work as expected for a ParquetColumnVector", {
+    ## "=="
+    x <- induced == spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) == as.vector(spontaneous))
+
+    x <- induced == 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) == 1L)
+
+    x <- induced == 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) == 3.14)
+
+    x <- 1L == spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L == as.vector(spontaneous))
+
+    x <- 3.14 == spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 == as.vector(spontaneous))
+
+    ## ">"
+    x <- induced > spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) > as.vector(spontaneous))
+
+    x <- induced > 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) > 1L)
+
+    x <- induced > 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) > 3.14)
+
+    x <- 1L > spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L > as.vector(spontaneous))
+
+    x <- 3.14 > spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 > as.vector(spontaneous))
+
+    ## "<"
+    x <- induced < spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) < as.vector(spontaneous))
+
+    x <- induced < 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) < 1L)
+
+    x <- induced < 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) < 3.14)
+
+    x <- 1L < spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L < as.vector(spontaneous))
+
+    x <- 3.14 < spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 < as.vector(spontaneous))
+
+    ## "!="
+    x <- induced != spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) != as.vector(spontaneous))
+
+    x <- induced != 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) != 1L)
+
+    x <- induced != 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(spontaneous) != 3.14)
+
+    x <- 1L != spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L != as.vector(spontaneous))
+
+    x <- 3.14 != spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 != as.vector(spontaneous))
+
+    ## "<="
+    x <- induced <= spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) <= as.vector(spontaneous))
+
+    x <- induced <= 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) <= 1L)
+
+    x <- induced <= 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) <= 3.14)
+
+    x <- 1L <= spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L <= as.vector(spontaneous))
+
+    x <- 3.14 <= spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 <= as.vector(spontaneous))
+
+    ## ">="
+    x <- induced >= spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) >= as.vector(spontaneous))
+
+    x <- induced >= 1L
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) >= 1L)
+
+    x <- induced >= 3.14
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), as.vector(induced) >= 3.14)
+
+    x <- 1L >= spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 1L >= as.vector(spontaneous))
+
+    x <- 3.14 >= spontaneous
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(x), 3.14 >= as.vector(spontaneous))
+})
+
+test_that("Logic methods work as expected for a ParquetColumnVector", {
+    ## "&"
+    x <- age > 30
+    y <- case > 0
+    z <- x & y
+    expect_s4_class(z, "ParquetColumnVector")
+    expect_equal(as.vector(z), as.vector(age > 30) & as.vector(case > 0))
+
+    ## "|"
+    x <- age > 30
+    y <- case > 0
+    z <- x | y
+    expect_s4_class(x, "ParquetColumnVector")
+    expect_equal(as.vector(z), as.vector(age > 30) | as.vector(case > 0))
 })
 
 test_that("Math methods work as expected for a ParquetColumnVector", {
