@@ -16,6 +16,7 @@
 \alias{DelayedArray,ParquetColumnSeed-method}
 \alias{extract_array,ParquetColumnSeed-method}
 \alias{ParquetColumnVector-class}
+\alias{show,ParquetColumnVector-method}
 \alias{Ops,ParquetColumnVector,ParquetColumnVector-method}
 \alias{Ops,ParquetColumnVector,numeric-method}
 \alias{Ops,numeric,ParquetColumnVector-method}

@@ -52,6 +52,7 @@
 #' DelayedArray,ParquetColumnSeed-method
 #' extract_array,ParquetColumnSeed-method
 #' ParquetColumnVector-class
+#' show,ParquetColumnVector-method
 #' Ops,ParquetColumnVector,ParquetColumnVector-method
 #' Ops,ParquetColumnVector,numeric-method
 #' Ops,numeric,ParquetColumnVector-method
@@ -269,6 +270,22 @@ ParquetColumnSeed <- function(path, column, type = NULL, length = NULL, ...) {
 
 #' @export
 setClass("ParquetColumnVector", contains = "DelayedArray", slots = c(seed = "ParquetColumnSeed"))
+
+#' @export
+setMethod("show", "ParquetColumnVector", function(object) {
+    n <- dim(object)
+    k <- min(n, 5L)
+    type <- seed(object)@type
+    cat(sprintf("<%d> %s object of type \"%s\":\n", n, class(object)[[1L]], type))
+    out <- extract_array(seed(object), list(seq_len(k)))
+    if (type == "character") {
+        out <- sprintf("\"%s\"", out)
+    }
+    if (n > k) {
+        out <- c(out, "...")
+    }
+    print(out, quote = FALSE)
+})
 
 #' @export
 #' @importFrom DelayedArray seed
