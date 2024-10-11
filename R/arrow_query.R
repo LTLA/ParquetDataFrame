@@ -8,22 +8,22 @@
 #' @author Patrick Aboyoun
 #'
 #' @examples
-#' query
-#' showMethods("query")
+#' arrow_query
+#' showMethods("arrow_query")
 #'
 #' @aliases
-#' query
+#' arrow_query
 #'
-#' query,ParquetColumnSeed-method
-#' query,ParquetColumnVector-method
-#' query,ParquetDataFrame-method
+#' arrow_query,ParquetColumnSeed-method
+#' arrow_query,ParquetColumnVector-method
+#' arrow_query,ParquetDataFrame-method
 #'
 #' @export
-setGeneric("query", function(x, ...) standardGeneric("query"))
+setGeneric("arrow_query", function(x, ...) standardGeneric("arrow_query"))
 
 setOldClass("arrow_dplyr_query")
 
-identicalQueryBody <- function(x, y) {
+.identicalQueryBody <- function(x, y) {
     body <-  c(".data", "filtered_rows", "group_by_vars", "drop_empty_groups", "arrange_vars", "arrange_desc")
     inherits(x, "arrow_dplyr_query") &&
     inherits(y, "arrow_dplyr_query") &&

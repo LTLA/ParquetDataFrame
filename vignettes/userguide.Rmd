@@ -93,11 +93,11 @@ This may preclude further optimizations in cases where we consider directly oper
 
 # Retrieving the Arrow Dataset
 
-At any point, users can retrieve the query to the underlying Parquet data via the `query` method.
+At any point, users can retrieve the query to the underlying Parquet data via the `arrow_query` method.
 This can be used with methods in the `r CRANpkg("arrow")` package to push more complex operations to the C++ libraries for greater efficiency.
 
 ```{r}
-query(df)
+arrow_query(df)
 ```
 
 Note that the acquired query will not capture any delayed subsetting/mutation operations that have been applied in the R session.

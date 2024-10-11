@@ -35,6 +35,6 @@ RoxygenNote: 7.3.2
 Encoding: UTF-8
 Collate:
     'acquireDataset.R'
-    'query.R'
+    'arrow_query.R'
     'ParquetColumnSeed.R'
     'ParquetDataFrame.R'

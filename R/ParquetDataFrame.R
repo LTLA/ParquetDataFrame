@@ -72,7 +72,7 @@
 #' as.data.frame,ParquetDataFrame-method
 #' coerce,ParquetDataFrame,DFrame-method
 #'
-#' @include query.R
+#' @include arrow_query.R
 #' @include acquireDataset.R
 #' @include ParquetColumnSeed.R
 #'
@@ -115,7 +115,7 @@ setMethod("show", "ParquetDataFrame", function(object) {
 })
 
 #' @export
-setMethod("query", "ParquetDataFrame", function(x) x@query)
+setMethod("arrow_query", "ParquetDataFrame", function(x) x@query)
 
 #' @export
 setMethod("nrow", "ParquetDataFrame", function(x) x@nrows)
@@ -127,7 +127,7 @@ setMethod("length", "ParquetDataFrame", function(x) length(names(x)))
 setMethod("rownames", "ParquetDataFrame", function(x) NULL)
 
 #' @export
-setMethod("names", "ParquetDataFrame", function(x) names(query(x)))
+setMethod("names", "ParquetDataFrame", function(x) names(arrow_query(x)))
 
 #' @export
 setReplaceMethod("rownames", "ParquetDataFrame", function(x, value) {
@@ -146,7 +146,7 @@ setReplaceMethod("names", "ParquetDataFrame", function(x, value) {
     if (identical(value, names(x))) {
         return(x)
     }
-    query <- rename(query(x), !!!setNames(names(x), value))
+    query <- rename(arrow_query(x), !!!setNames(names(x), value))
     mc <- mcols(x)
     if (!is.null(mc)) {
         rownames(mc) <- value
@@ -162,9 +162,9 @@ setMethod("extractROWS", "ParquetDataFrame", function(x, i) {
         x
     } else if (is(i, "ParquetColumnVector") &&
                (seed(i)@type == "logical") &&
-               identicalQueryBody(query(x), query(i))) {
-        keep <- query(i)$selected_columns[[1L]]
-        query <- filter(query(x), !!keep)
+               .identicalQueryBody(arrow_query(x), arrow_query(i))) {
+        keep <- arrow_query(i)$selected_columns[[1L]]
+        query <- filter(arrow_query(x), !!keep)
         initialize(x, query = query, nrows = nrow(query))
     } else {
         collapsed <- .collapse_to_df(x)
@@ -185,7 +185,7 @@ setMethod("head", "ParquetDataFrame", function(x, n = 6L, ...) {
     if (n > nrow(x)) {
         x
     } else {
-        initialize(x, query = head(query(x), n), nrows = n)
+        initialize(x, query = head(arrow_query(x), n), nrows = n)
     }
 })
 
@@ -209,7 +209,7 @@ setMethod("extractCOLS", "ParquetDataFrame", function(x, i) {
         x <- .collapse_to_df(x)
         extractCOLS(x, i)
     } else {
-        query <- query(x)[, i]
+        query <- arrow_query(x)[, i]
         mc <- extractROWS(mcols(x), i)
         initialize(x, query = query, elementMetadata = mc)
     }
@@ -227,7 +227,7 @@ setMethod("[[", "ParquetDataFrame", function(x, i, j, ...) {
     }
 
     i <- normalizeDoubleBracketSubscript(i, x)
-    ParquetColumnVector(query(x), column = names(x)[i], length = nrow(x))
+    ParquetColumnVector(arrow_query(x), column = names(x)[i], length = nrow(x))
 })
 
 #' @export
@@ -241,7 +241,7 @@ setMethod("replaceROWS", "ParquetDataFrame", function(x, i, value) {
 #' @importFrom S4Vectors normalizeSingleBracketReplacementValue
 setMethod("normalizeSingleBracketReplacementValue", "ParquetDataFrame", function(value, x) {
     if (is(value, "ParquetColumnVector")) {
-        return(new("ParquetDataFrame", query = query(value), nrows = length(value)))
+        return(new("ParquetDataFrame", query = arrow_query(value), nrows = length(value)))
     }
     callNextMethod()
 })
@@ -254,8 +254,8 @@ setMethod("replaceCOLS", "ParquetDataFrame", function(x, i, value) {
     i2 <- normalizeSingleBracketSubscript(i, xstub, allow.NAs = TRUE)
     if (!anyNA(i2)) {
         if (is(value, "ParquetDataFrame")) {
-            if (identicalQueryBody(query(x), query(value))) {
-                x@query$selected_columns[i] <- query(value)$selected_columns
+            if (.identicalQueryBody(arrow_query(x), arrow_query(value))) {
+                x@query$selected_columns[i] <- arrow_query(value)$selected_columns
                 return(x)
             }
         }
@@ -274,8 +274,8 @@ setMethod("[[<-", "ParquetDataFrame", function(x, i, j, ..., value) {
     i2 <- normalizeDoubleBracketSubscript(i, x, allow.nomatch = TRUE)
     if (length(i2) == 1L && !is.na(i2)) {
         if (is(value, "ParquetColumnVector")) {
-            if (identicalQueryBody(query(x), query(value))) {
-                x@query$selected_columns[i] <- query(value)$selected_columns
+            if (.identicalQueryBody(arrow_query(x), arrow_query(value))) {
+                x@query$selected_columns[i] <- arrow_query(value)$selected_columns
                 return(x)
             }
         }
@@ -300,14 +300,14 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
             if (is(obj, "ParquetColumnVector")) {
                 cname <- names(objects)[i]
                 if (!is.null(cname)) {
-                    obj@seed@query <- rename(query(obj), !!!setNames(names(query(obj)), cname))
-                    objects[[i]]@seed@query <- query(obj)
+                    obj@seed@query <- rename(arrow_query(obj), !!!setNames(names(arrow_query(obj)), cname))
+                    objects[[i]]@seed@query <- arrow_query(obj)
                 }
             }
 
             if (is.null(xquery)) {
-                xquery <- query(obj)
-            } else if (!identicalQueryBody(query(obj), xquery)) {
+                xquery <- arrow_query(obj)
+            } else if (!.identicalQueryBody(arrow_query(obj), xquery)) {
                 preserved <- FALSE
                 break
             }
@@ -342,7 +342,7 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
                 md <- metadata(obj)
             }
 
-            all_selected_columns[[i]] <- query(obj)$selected_columns
+            all_selected_columns[[i]] <- arrow_query(obj)$selected_columns
             all_mcols[[i]] <- mc
             all_metadata[[i]] <- md
         }
@@ -375,7 +375,7 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 .collapse_to_df <- function(x) {
     df <- make_zero_col_DFrame(nrow(x))
     for (i in names(x)) {
-        df[[i]] <- ParquetColumnVector(query(x), column = i, length = nrow(x))
+        df[[i]] <- ParquetColumnVector(arrow_query(x), column = i, length = nrow(x))
     }
     mcols(df) <- mcols(x, use.names = FALSE)
     metadata(df) <- metadata(x)
@@ -384,7 +384,7 @@ setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 
 #' @export
 setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, optional = FALSE, ...) {
-    as.data.frame(query(x), row.names = row.names, optional = optional, ...)
+    as.data.frame(arrow_query(x), row.names = row.names, optional = optional, ...)
 })
 
 #' @export
