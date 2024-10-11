@@ -274,11 +274,12 @@ ParquetColumnSeed <- function(path, column, type = NULL, length = NULL, ...) {
 setClass("ParquetColumnVector", contains = "DelayedArray", slots = c(seed = "ParquetColumnSeed"))
 
 #' @export
+#' @importFrom S4Vectors classNameForDisplay
 setMethod("show", "ParquetColumnVector", function(object) {
     n <- dim(object)
     k <- min(n, 5L)
     type <- seed(object)@type
-    cat(sprintf("<%d> %s object of type \"%s\":\n", n, class(object)[[1L]], type))
+    cat(sprintf("<%d> %s object of type \"%s\":\n", n, classNameForDisplay(object), type))
     out <- extract_array(seed(object), list(seq_len(k)))
     if (type == "character") {
         out <- sprintf("\"%s\"", out)
@@ -287,6 +288,7 @@ setMethod("show", "ParquetColumnVector", function(object) {
         out <- c(out, "...")
     }
     print(out, quote = FALSE)
+    invisible(NULL)
 })
 
 #' @export

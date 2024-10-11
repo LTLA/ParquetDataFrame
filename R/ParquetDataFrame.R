@@ -89,12 +89,29 @@ ParquetDataFrame <- function(path, ...) {
 setClass("ParquetDataFrame", contains = "DataFrame", slots = c(query = "arrow_dplyr_query", nrows = "integer"))
 
 #' @export
-#' @importFrom S4Vectors get_showTailLines set_showTailLines
+#' @importFrom S4Vectors classNameForDisplay get_showHeadLines
+#' @importFrom S4Vectors makeNakedCharacterMatrixForDisplay
 setMethod("show", "ParquetDataFrame", function(object) {
-    ntail <- get_showTailLines()
-    on.exit(set_showTailLines(ntail))
-    set_showTailLines(0L)
-    callNextMethod()
+    nr <- nrow(object)
+    nc <- ncol(object)
+    k <- min(nr, get_showHeadLines())
+
+    df <- as.data.frame(head(object, k))
+    rownames(df) <- as.character(seq_len(k))
+
+    mat <- makeNakedCharacterMatrixForDisplay(df)
+    mat <- rbind(rep.int("<ParquetColumnVector>", nc), mat)
+    if (nr > k) {
+        mat <- rbind(mat, rbind("..." = rep.int("...", nc)))
+    }
+
+    cat(classNameForDisplay(object), " with ",
+        nr, ngettext(nr, " row", " rows"), " and ",
+        nc, ngettext(nc, " column", " columns"), "\n",
+        sep = "")
+    print(mat, quote = FALSE, right = TRUE)
+
+    invisible(NULL)
 })
 
 #' @export
