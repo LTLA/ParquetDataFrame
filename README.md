@@ -19,11 +19,6 @@ df
 ## 4                    21.4                     6                   258
 ## 5                    18.7                     8                   360
 ## ...                   ...                   ...                   ...
-## 28                   30.4                     4                  95.1
-## 29                   15.8                     8                   351
-## 30                   19.7                     6                   145
-## 31                     15                     8                   301
-## 32                   21.4                     4                   121
 ##                        hp                  drat                    wt
 ##     <ParquetColumnVector> <ParquetColumnVector> <ParquetColumnVector>
 ## 1                     110                   3.9                  2.62
@@ -32,11 +27,6 @@ df
 ## 4                     110                  3.08                 3.215
 ## 5                     175                  3.15                  3.44
 ## ...                   ...                   ...                   ...
-## 28                    113                  3.77                 1.513
-## 29                    264                  4.22                  3.17
-## 30                    175                  3.62                  2.77
-## 31                    335                  3.54                  3.57
-## 32                    109                  4.11                  2.78
 ##                      qsec                    vs                    am
 ##     <ParquetColumnVector> <ParquetColumnVector> <ParquetColumnVector>
 ## 1                   16.46                     0                     1
@@ -45,11 +35,6 @@ df
 ## 4                   19.44                     1                     0
 ## 5                   17.02                     0                     0
 ## ...                   ...                   ...                   ...
-## 28                   16.9                     1                     1
-## 29                   14.5                     0                     1
-## 30                   15.5                     0                     1
-## 31                   14.6                     0                     1
-## 32                   18.6                     1                     1
 ##                      gear                  carb
 ##     <ParquetColumnVector> <ParquetColumnVector>
 ## 1                       4                     4
@@ -58,11 +43,6 @@ df
 ## 4                       3                     1
 ## 5                       3                     2
 ## ...                   ...                   ...
-## 28                      5                     2
-## 29                      5                     4
-## 30                      5                     6
-## 31                      5                     8
-## 32                      4                     2
 ```
 
 This produces a file-backed `ParquetDataFrame`, consisting of file-backed `ParquetColumnVector` objects.
@@ -100,6 +80,7 @@ In such cases, the `ParquetDataFrame` will collapse to a `DFrame` of `ParquetCol
 ```r
 se$random_junk <- runif(ncol(se))
 se <- se[,se$random_junk < 0.5]
+colData(se)
 ## DataFrame with 17 rows and 12 columns
 ##                mpg            cyl           disp             hp           drat
 ##     <DelayedArray> <DelayedArray> <DelayedArray> <DelayedArray> <DelayedArray>
