@@ -40,6 +40,7 @@
 #' @aliases
 #' ParquetColumnSeed-class
 #' dim,ParquetColumnSeed-method
+#' type,ParquetColumnSeed-method
 #' Arith,ParquetColumnSeed,ParquetColumnSeed-method
 #' Arith,ParquetColumnSeed,numeric-method
 #' Arith,numeric,ParquetColumnSeed-method
@@ -48,7 +49,6 @@
 #' Compare,vector,ParquetColumnSeed-method
 #' Logic,ParquetColumnSeed,ParquetColumnSeed-method
 #' Math,ParquetColumnSeed-method
-#' type,ParquetColumnSeed-method
 #' DelayedArray,ParquetColumnSeed-method
 #' extract_array,ParquetColumnSeed-method
 #' ParquetColumnVector-class
@@ -74,6 +74,10 @@ setMethod("arrow_query", "ParquetColumnSeed", function(x) x@query)
 
 #' @export
 setMethod("dim", "ParquetColumnSeed", function(x) x@length)
+
+#' @export
+#' @importFrom DelayedArray type
+setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
 #' @importFrom dplyr pull slice_head
 .getColumnType <- function(column_query) {
@@ -209,10 +213,6 @@ setMethod("Math", "ParquetColumnSeed", function(x) {
     type <- .getColumnType(query)
     initialize(x, query = query, type = type)
 })
-
-#' @export
-#' @importFrom DelayedArray type
-setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
 #' @export
 #' @importFrom DelayedArray DelayedArray

@@ -4,6 +4,7 @@
 \alias{ParquetColumnSeed}
 \alias{ParquetColumnSeed-class}
 \alias{dim,ParquetColumnSeed-method}
+\alias{type,ParquetColumnSeed-method}
 \alias{Arith,ParquetColumnSeed,ParquetColumnSeed-method}
 \alias{Arith,ParquetColumnSeed,numeric-method}
 \alias{Arith,numeric,ParquetColumnSeed-method}
@@ -12,7 +13,6 @@
 \alias{Compare,vector,ParquetColumnSeed-method}
 \alias{Logic,ParquetColumnSeed,ParquetColumnSeed-method}
 \alias{Math,ParquetColumnSeed-method}
-\alias{type,ParquetColumnSeed-method}
 \alias{DelayedArray,ParquetColumnSeed-method}
 \alias{extract_array,ParquetColumnSeed-method}
 \alias{ParquetColumnVector-class}
