@@ -85,8 +85,9 @@ ParquetDataFrame <- function(path, ...) {
 }
 
 #' @export
+#' @importClassesFrom BiocGenerics OutOfMemoryObject
 #' @importClassesFrom S4Vectors DataFrame
-setClass("ParquetDataFrame", contains = "DataFrame", slots = c(query = "arrow_dplyr_query", nrows = "integer"))
+setClass("ParquetDataFrame", contains = c("DataFrame", "OutOfMemoryObject"), slots = c(query = "arrow_dplyr_query", nrows = "integer"))
 
 #' @export
 #' @importFrom S4Vectors classNameForDisplay get_showHeadLines
