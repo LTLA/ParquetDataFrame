@@ -174,18 +174,24 @@ setMethod("[", "ParquetArraySeed", function(x, i, j, ..., drop = TRUE) {
 #' @importFrom DelayedArray extract_array
 #' @importFrom dplyr filter
 setMethod("extract_array", "ParquetArraySeed", function(x, index) {
-    query <- arrow_query(x)
-
     # Process index argument
     if (!is.list(index)) {
         stop("'index' must be a list")
     } else if (all(vapply(index, is.null, logical(1L)))) {
         index <- as.list(x@key)
-    } else if (length(index) != length(x@key)) {
-        stop("'index' contains an incorrect number of subscripts")
-    } else {
+    } else if (length(index) == length(x@key)) {
         names(index) <- names(x@key)
     }
+
+    # Initialize output array
+    fill <- switch(x@type, logical = FALSE, integer = 0L, double = 0, character = "")
+    output <- array(fill, dim = lengths(index, use.names = FALSE))
+    if (min(dim(output)) == 0L) {
+        return(output)
+    }
+
+    # Extract query
+    query <- arrow_query(x)
 
     # Add key filters
     for (i in seq_along(index)) {
@@ -205,20 +211,20 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
                     double = filter(query, !!as.name(x@value) != 0),
                     character = filter(query, !!as.name(x@value) != ""))
 
-    # Create output array
-    fill <- switch(x@type, logical = FALSE, integer = 0L, double = 0, character = "")
-    output <- array(fill, dim = lengths(index, use.names = FALSE), dimnames = index)
-    if (min(dim(output)) > 0L) {
-        df <- as.data.frame(query)
-        key <- df[, names(x@key)]
-        if (anyDuplicated(key)) {
-            stop("duplicate keys found in Parquet data")
-        }
-        output[as.matrix(key)] <- df[[x@value]]
-        if (x@drop) {
-            output <- drop(output)
-        }
+    # Execute query
+    df <- as.data.frame(query)
+    key <- df[, names(x@key)]
+    if (anyDuplicated(key)) {
+        stop("duplicate keys found in Parquet data")
     }
+
+    # Fill output array
+    dimnames(output) <- index
+    output[as.matrix(key)] <- df[[x@value]]
+    if (x@drop) {
+        output <- drop(output)
+    }
+
     output
 })
 

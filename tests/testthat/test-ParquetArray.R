@@ -26,3 +26,53 @@ test_that("basic methods work as expected for a ParquetArray", {
     expect_identical(dim(pqarray), dim(titanic_array))
     expect_identical(dimnames(pqarray), dimnames(titanic_array))
 })
+
+test_that("extraction methods work as expected for a ParquetArray", {
+    pqarray <- ParquetArray(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
+
+    expect_error(pqarray[,])
+
+    object <- pqarray[]
+    expect_s4_class(object, "ParquetArray")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(titanic_array))
+    expect_identical(dim(object), dim(titanic_array))
+    expect_identical(dimnames(object), dimnames(titanic_array))
+    expect_identical(as.array(object), titanic_array)
+
+    object <- pqarray[, 2:1, , ]
+    expected <- titanic_array[, 2:1, , ]
+    expect_s4_class(object, "ParquetArray")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+
+    object <- pqarray[c(4, 2), , 1, ]
+    expected <- titanic_array[c(4, 2), , 1, ]
+    expect_s4_class(object, "ParquetArray")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+
+    object <- pqarray[c(4, 2), , 1, , drop = FALSE]
+    expected <- titanic_array[c(4, 2), , 1, , drop = FALSE]
+    expect_s4_class(object, "ParquetArray")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+
+    object <- pqarray[c("1st", "2nd", "3rd"), "Female", "Child", ]
+    expected <- titanic_array[c("1st", "2nd", "3rd"), "Female", "Child", ]
+    expect_s4_class(object, "ParquetArray")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+})

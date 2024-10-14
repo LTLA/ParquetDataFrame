@@ -9,7 +9,7 @@ test_that("basic methods work as expected for a ParquetArraySeed", {
     expect_identical(length(seed), length(titanic_array))
     expect_identical(dim(seed), dim(titanic_array))
     expect_identical(dimnames(seed), dimnames(titanic_array))
-    expect_equal(as.array(seed), titanic_array)
+    expect_identical(as.array(seed), titanic_array)
 
     seed <- ParquetArraySeed(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate", type = "double")
     expect_s4_class(seed, "ParquetArraySeed")
@@ -29,5 +29,50 @@ test_that("basic methods work as expected for a ParquetArraySeed", {
 
 test_that("extraction methods work as expected for a ParquetArraySeed", {
     seed <- ParquetArraySeed(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
-    expect_identical(extract_array(seed, list(c(2,4), 2:1, 1, 2)), titanic_array[c(2,4), 2:1, 1, 2, drop = FALSE])
+
+    expect_error(seed[,])
+
+    object <- seed[]
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(titanic_array))
+    expect_identical(dim(object), dim(titanic_array))
+    expect_identical(dimnames(object), dimnames(titanic_array))
+    expect_identical(as.array(object), titanic_array)
+
+    object <- seed[, 2:1, , ]
+    expected <- titanic_array[, 2:1, , ]
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+
+    object <- seed[c(4, 2), , 1, ]
+    expected <- titanic_array[c(4, 2), , 1, ]
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+
+    object <- seed[c(4, 2), , 1, , drop = FALSE]
+    expected <- titanic_array[c(4, 2), , 1, , drop = FALSE]
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+
+    object <- seed[c("1st", "2nd", "3rd"), "Female", "Child", ]
+    expected <- titanic_array[c("1st", "2nd", "3rd"), "Female", "Child", ]
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
 })
