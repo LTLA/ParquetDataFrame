@@ -33,3 +33,29 @@ test_that("basic methods work as expected for a ParquetMatrix", {
     expect_identical(dimnames(pqmat), dimnames(state.x77))
     expect_equal(as.matrix(pqmat), state.x77)
 })
+
+test_that("aperm and t methods work as expected for a ParquetMatrix", {
+    names(dimnames(state.x77)) <- c("rowname", "colname")
+
+    pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
+
+    object <- aperm(pqmat, c(2, 1))
+    expected <- aperm(state.x77, c(2, 1))
+    expect_s4_class(object, "ParquetMatrix")
+    expect_identical(type(object), "double")
+    expect_identical(type(object), typeof(expected))
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_equal(as.matrix(object), expected)
+
+    object <- t(pqmat)
+    expected <- t(state.x77)
+    expect_s4_class(object, "ParquetMatrix")
+    expect_identical(type(object), "double")
+    expect_identical(type(object), typeof(expected))
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_equal(as.matrix(object), expected)
+})
