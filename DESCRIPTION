@@ -14,12 +14,14 @@ Authors@R:
     )
 License: MIT + file LICENSE
 Depends:
-    DelayedArray (>= 0.31.8),
-    S4Vectors
+    DelayedArray (>= 0.31.8)
 Imports: 
     stats,
     methods,
     BiocGenerics (>= 0.51.2),
+    S4Vectors,
+    IRanges,
+    S4Arrays (>= 1.1.1),
     arrow,
     dplyr
 Suggests:
@@ -36,5 +38,8 @@ Encoding: UTF-8
 Collate:
     'acquireDataset.R'
     'arrow_query.R'
+    'ParquetArraySeed.R'
+    'ParquetArray.R'
     'ParquetColumnSeed.R'
     'ParquetDataFrame.R'
+    'ParquetMatrix.R'

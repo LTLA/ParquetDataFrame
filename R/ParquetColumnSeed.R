@@ -79,11 +79,6 @@ setMethod("dim", "ParquetColumnSeed", function(x) x@length)
 #' @importFrom DelayedArray type
 setMethod("type", "ParquetColumnSeed", function(x) x@type)
 
-#' @importFrom dplyr pull slice_head
-.getColumnType <- function(column_query) {
-    DelayedArray::type(pull(slice_head(column_query, n = 0L), as_vector = TRUE))
-}
-
 #' @importFrom dplyr mutate select
 .Arith.ParquetColumnSeed <- function(.Generic, query, v1, v2, length) {
     query <- switch(.Generic,

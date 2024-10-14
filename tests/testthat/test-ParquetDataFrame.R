@@ -1,15 +1,15 @@
 # Tests the basic functions of a ParquetDataFrame.
 # library(testthat); library(ParquetDataFrame); source("setup.R"); source("test-ParquetDataFrame.R")
 
-x <- ParquetDataFrame(example_path)
+x <- ParquetDataFrame(infert_path)
 
 test_that("basic methods work for a ParquetDataFrame", {
-    expect_identical(ncol(x), ncol(example_df))
-    expect_identical(nrow(x), nrow(example_df))
+    expect_identical(ncol(x), ncol(infert_df))
+    expect_identical(nrow(x), nrow(infert_df))
     expect_null(rownames(x))
-    expect_identical(colnames(x), colnames(example_df))
+    expect_identical(colnames(x), colnames(infert_df))
 
-    unnamed <- example_df
+    unnamed <- infert_df
     rownames(unnamed) <- NULL
     expect_identical(as.data.frame(x), unnamed)
 })
@@ -41,9 +41,9 @@ test_that("adding rownames collapses to an ordinary DFrame", {
 test_that("slicing by columns preserves type of a ParquetDataFrame", {
     copy <- x[,1:2]
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(example_df)[1:2])
+    expect_identical(colnames(copy), colnames(infert_df)[1:2])
     expect_identical(ncol(copy), 2L)
-    unnamed <- example_df[,1:2]
+    unnamed <- infert_df[,1:2]
     rownames(unnamed) <- NULL
     expect_identical(as.data.frame(copy), unnamed)
 
@@ -56,12 +56,12 @@ test_that("slicing by columns preserves type of a ParquetDataFrame", {
     keep <- startsWith(colnames(x), "d")
     copy <- x[,keep]
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(example_df)[keep])
+    expect_identical(colnames(copy), colnames(infert_df)[keep])
     expect_identical(ncol(copy), sum(keep))
 
     copy <- x[,5,drop=FALSE]
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(example_df)[5])
+    expect_identical(colnames(copy), colnames(infert_df)[5])
 
     # Respects mcols.
     x2 <- x
@@ -73,42 +73,42 @@ test_that("slicing by columns preserves type of a ParquetDataFrame", {
 test_that("extraction of a column yields a ParquetColumnVector", {
     col <- x[,5]
     expect_s4_class(col, "ParquetColumnVector")
-    expect_identical(as.vector(col), example_df[,5])
+    expect_identical(as.vector(col), infert_df[,5])
 
-    nm <- colnames(example_df)[5]
+    nm <- colnames(infert_df)[5]
     col <- x[[nm]]
     expect_s4_class(col, "ParquetColumnVector")
-    expect_identical(as.vector(col), example_df[[nm]])
+    expect_identical(as.vector(col), infert_df[[nm]])
 })
 
 test_that("conditional slicing by rows preserves type of a ParquetDataFrame", {
     i <- x$age > 30
     copy <- x[i,]
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(example_df))
-    expect_identical(as.vector(copy[[1]]), example_df[[1]][as.vector(i)])
+    expect_identical(colnames(copy), colnames(infert_df))
+    expect_identical(as.vector(copy[[1]]), infert_df[[1]][as.vector(i)])
 })
 
 test_that("positional slicing by rows collapses to an ordinary DFrame", {
     i <- sample(nrow(x))
     copy <- x[i,]
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), colnames(example_df))
-    expect_identical(as.vector(copy[[1]]), example_df[[1]][i])
+    expect_identical(colnames(copy), colnames(infert_df))
+    expect_identical(as.vector(copy[[1]]), infert_df[[1]][i])
 })
 
 test_that("head preserves type of a ParquetDataFrame", {
     copy <- head(x, 20)
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(example_df))
-    expect_identical(as.data.frame(copy), head(example_df, 20))
+    expect_identical(colnames(copy), colnames(infert_df))
+    expect_identical(as.data.frame(copy), head(infert_df, 20))
 })
 
 test_that("tail collapses to an ordinary DFrame", {
     copy <- tail(x, 20)
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), colnames(example_df))
-    expect_identical(as.vector(copy[[1]]), tail(example_df[[1]], 20))
+    expect_identical(colnames(copy), colnames(infert_df))
+    expect_identical(as.vector(copy[[1]]), tail(infert_df[[1]], 20))
 })
 
 test_that("subset assignments that collapse to an ordinary DFrame", {
@@ -116,7 +116,7 @@ test_that("subset assignments that collapse to an ordinary DFrame", {
     copy[1:5,] <- copy[9:13,]
     expect_s4_class(copy, "DFrame")
     expect_s4_class(copy[[1]], "DelayedArray")
-    ref <- example_df
+    ref <- infert_df
     ref[1:5,] <- ref[9:13,]
     rownames(ref) <- NULL
     expect_identical(as.data.frame(copy), ref)
@@ -149,7 +149,7 @@ test_that("subset assignments that return a ParquetDataFrame", {
     copy[[1]] <- copy[[3]]
     expect_s4_class(copy, "ParquetDataFrame")
     expect_s4_class(copy[[1]], "ParquetColumnVector")
-    ref <- example_df
+    ref <- infert_df
     ref[[1]] <- ref[[3]]
     rownames(ref) <- NULL
     expect_identical(as.data.frame(copy), ref)
@@ -158,7 +158,7 @@ test_that("subset assignments that return a ParquetDataFrame", {
     copy[,c(1,2,3)] <- copy[,c(4,5,6)]
     expect_s4_class(copy, "ParquetDataFrame")
     expect_s4_class(copy[[1]], "ParquetColumnVector")
-    ref <- example_df
+    ref <- infert_df
     ref[,c(1,2,3)] <- ref[,c(4,5,6)]
     rownames(ref) <- NULL
     expect_identical(as.data.frame(copy), ref)
@@ -169,7 +169,7 @@ test_that("rbinding collapses to an ordinary DFrame", {
     expect_s4_class(copy, "DFrame")
     expect_s4_class(copy[[1]], "DelayedArray")
 
-    ref <- rbind(example_df, example_df)
+    ref <- rbind(infert_df, infert_df)
     rownames(ref) <- NULL
     expect_identical(as.data.frame(copy), ref)
 })
@@ -178,7 +178,7 @@ test_that("cbinding may or may not collapse to an ordinary DFrame", {
     # Same path, we get another PDF.
     copy <- cbind(x, foo=x[["age"]])
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), c(colnames(example_df), "foo"))
+    expect_identical(colnames(copy), c(colnames(infert_df), "foo"))
 
     # Duplicate names causes unique renaming.
     copy <- cbind(x, x)
@@ -188,21 +188,21 @@ test_that("cbinding may or may not collapse to an ordinary DFrame", {
     # Duplicate names causes unique renaming.
     copy <- cbind(x, age=x[["age"]])
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), c(colnames(example_df), "age_1"))
+    expect_identical(colnames(copy), c(colnames(infert_df), "age_1"))
 
     # Duplicate names causes unique renaming.
     copy <- cbind(age=x[["age"]], x)
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), make.unique(c("age", colnames(example_df)), sep="_"))
+    expect_identical(colnames(copy), make.unique(c("age", colnames(infert_df)), sep="_"))
 
     # Different DataFrame class causes collapse.
-    copy <- cbind(x, example_df)
+    copy <- cbind(x, infert_df)
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), rep(colnames(example_df), 2))
+    expect_identical(colnames(copy), rep(colnames(infert_df), 2))
 
     # Different paths causes collapse.
     tmp <- tempfile()
-    file.symlink(example_path, tmp)
+    file.symlink(infert_path, tmp)
     x2 <- ParquetDataFrame(tmp)
     copy <- cbind(x, x2)
     expect_s4_class(copy, "DFrame")
@@ -210,7 +210,7 @@ test_that("cbinding may or may not collapse to an ordinary DFrame", {
     # Different paths causes collapse.
     copy <- cbind(x, age=x2[["age"]])
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(example_df), "age"))
+    expect_identical(colnames(copy), c(colnames(infert_df), "age"))
 })
 
 test_that("cbinding carries forward any metadata", {
@@ -241,7 +241,7 @@ test_that("cbinding carries forward any metadata", {
 test_that("as.data.frame works with duplicated columns", {
     duplicates <- c(1,1,2,2,3,4,3,5)
     copy <- x[,duplicates]
-    unnamed <- example_df[,duplicates]
+    unnamed <- infert_df[,duplicates]
     rownames(unnamed) <- NULL
     expect_identical(as.data.frame(copy), unnamed)
 })

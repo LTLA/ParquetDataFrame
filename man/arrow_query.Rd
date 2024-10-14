@@ -2,9 +2,12 @@
 % Please edit documentation in R/arrow_query.R
 \name{arrow_query}
 \alias{arrow_query}
+\alias{arrow_query,ParquetArray-method}
+\alias{arrow_query,ParquetArraySeed-method}
 \alias{arrow_query,ParquetColumnSeed-method}
 \alias{arrow_query,ParquetColumnVector-method}
 \alias{arrow_query,ParquetDataFrame-method}
+\alias{arrow_query,ParquetMatrix-method}
 \title{Query Accessor}
 \usage{
 arrow_query(x, ...)
