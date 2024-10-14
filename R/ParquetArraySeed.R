@@ -87,10 +87,32 @@ setValidity2("ParquetArraySeed", function(x) {
 setMethod("arrow_query", "ParquetArraySeed", function(x) x@query)
 
 #' @export
-setMethod("dim", "ParquetArraySeed", function(x) unname(lengths(x@key)))
+setMethod("dim", "ParquetArraySeed", function(x) {
+    ans <- lengths(x@key, use.names = FALSE)
+    if (x@drop) {
+        keep <- ans != 1L
+        if (!any(keep)) {
+            ans <- 1L
+        } else {
+            ans <- ans[keep]
+        }
+    }
+    ans
+})
 
 #' @export
-setMethod("dimnames", "ParquetArraySeed", function(x) unname(as.list(x@key)))
+setMethod("dimnames", "ParquetArraySeed", function(x) {
+    ans <- as.list(x@key)
+    if (x@drop) {
+        keep <- lengths(ans, use.names = FALSE) != 1L
+        if (!any(keep)) {
+            ans <- NULL
+        } else {
+            ans <- ans[keep]
+        }
+    }
+    ans
+})
 
 #' @export
 #' @importFrom DelayedArray type
@@ -154,12 +176,24 @@ setMethod("[", "ParquetArraySeed", function(x, i, j, ..., drop = TRUE) {
 setMethod("extract_array", "ParquetArraySeed", function(x, index) {
     query <- arrow_query(x)
 
-    # Add dimname filters
+    # Process index argument
+    if (!is.list(index)) {
+        stop("'index' must be a list")
+    } else if (all(vapply(index, is.null, logical(1L)))) {
+        index <- as.list(x@key)
+    } else if (length(index) != length(x@key)) {
+        stop("'index' contains an incorrect number of subscripts")
+    } else {
+        names(index) <- names(x@key)
+    }
+
+    # Add key filters
     for (i in seq_along(index)) {
-        if (is.null(index[[i]])) {
+        idx <- index[[i]]
+        if (is.null(idx)) {
             index[[i]] <- x@key[[i]]
-        } else {
-            index[[i]] <- x@key[[i]][index[[i]]]
+        } else if (is.numeric(idx)) {
+            index[[i]] <- x@key[[i]][idx]
         }
         query <- filter(query, !!as.name(names(x@key)[i]) %in% index[[i]])
     }
@@ -173,10 +207,14 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
 
     # Create output array
     fill <- switch(x@type, logical = FALSE, integer = 0L, double = 0, character = "")
-    output <- array(fill, dim = lengths(index), dimnames = index)
+    output <- array(fill, dim = lengths(index, use.names = FALSE), dimnames = index)
     if (min(dim(output)) > 0L) {
         df <- as.data.frame(query)
-        output[as.matrix(df[, names(x@key)])] <- df[[x@value]]
+        key <- df[, names(x@key)]
+        if (anyDuplicated(key)) {
+            stop("duplicate keys found in Parquet data")
+        }
+        output[as.matrix(key)] <- df[[x@value]]
         if (x@drop) {
             output <- drop(output)
         }

@@ -3,6 +3,8 @@
 
 
 test_that("basic methods work as expected for a ParquetMatrix", {
+    names(dimnames(state.x77)) <- list("rowname", "colname")
+
     pqmat <- ParquetMatrix(state_path, row = "rowname", col = "colname", value = "value")
     expect_s4_class(pqmat, "ParquetMatrix")
     expect_identical(type(pqmat), "double")

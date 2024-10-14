@@ -1,7 +1,6 @@
 # Titanic dataset
 titanic_array <- unclass(Titanic)
 storage.mode(titanic_array) <- "integer"
-names(dimnames(titanic_array)) <- NULL
 
 titanic_df <- do.call(expand.grid, c(dimnames(Titanic), stringsAsFactors = FALSE))
 titanic_df$fate <- as.integer(Titanic[as.matrix(titanic_df)])
