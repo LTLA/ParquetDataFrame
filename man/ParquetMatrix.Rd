@@ -8,15 +8,7 @@
 \alias{t,ParquetMatrix-method}
 \title{Parquet datasets as DelayedMatrix objects}
 \usage{
-ParquetMatrix(
-  data,
-  row,
-  col,
-  value,
-  dimensions = c(row, col),
-  type = NULL,
-  ...
-)
+ParquetMatrix(data, row, col, value, key = c(row, col), type = NULL, ...)
 }
 \arguments{
 \item{data}{Either a string containing the path to the Parquet data,
@@ -33,9 +25,9 @@ columns of the matrix.}
 \item{value}{String containing the name of the column in the Parquet data
 that specifies the value of the matrix.}
 
-\item{dimensions}{Either a character vector or a named list of character
-vectors containing the names of the columns in the Parquet data that specify
-the rows and columns of the matrix.}
+\item{key}{Either a character vector or a named list of character vectors
+containing the names of the columns in the Parquet data that specify the
+rows and columns of the matrix.}
 
 \item{type}{String specifying the type of the Parquet data values;
 one of \code{"logical"}, \code{"integer"}, \code{"double"}, or

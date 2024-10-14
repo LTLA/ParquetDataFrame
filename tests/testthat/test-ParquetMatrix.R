@@ -22,7 +22,7 @@ test_that("basic methods work as expected for a ParquetMatrix", {
     expect_identical(dimnames(pqmat), dimnames(state.x77))
     expect_equal(as.matrix(pqmat), state.x77)
 
-    pqmat <- ParquetMatrix(state_path, dimensions = list("rowname" = row.names(state.x77), "colname" = colnames(state.x77)), value = "value")
+    pqmat <- ParquetMatrix(state_path, key = list("rowname" = row.names(state.x77), "colname" = colnames(state.x77)), value = "value")
     expect_s4_class(pqmat, "ParquetMatrix")
     expect_identical(type(pqmat), "double")
     expect_identical(type(pqmat), typeof(state.x77))

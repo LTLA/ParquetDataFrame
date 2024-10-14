@@ -8,15 +8,15 @@
 \alias{t,ParquetArray-method}
 \title{Parquet datasets as DelayedArray objects}
 \usage{
-ParquetArray(data, dimensions, value, type = NULL, ...)
+ParquetArray(data, key, value, type = NULL, ...)
 }
 \arguments{
 \item{data}{Either a string containing the path to the Parquet data,
 or an existing ParquetArraySeed object.}
 
-\item{dimensions}{Either a character vector or a named list of character
-vectors containing the names of the columns in the Parquet data that specify
-the dimensions of the array.}
+\item{key}{Either a character vector or a named list of character vectors
+containing the names of the columns in the Parquet data that specify
+the primary key of the array.}
 
 \item{value}{String containing the name of the column in the Parquet data
 that specifies the value of the array.}
@@ -46,7 +46,7 @@ tf <- tempfile()
 on.exit(unlink(tf))
 arrow::write_parquet(df, tf)
 
-pqarray <- ParquetArray(tf, dimensions = c("Class", "Sex", "Age", "Survived"), value = "fate")
+pqarray <- ParquetArray(tf, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
 
 }
 \seealso{

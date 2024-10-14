@@ -21,7 +21,7 @@
 #' on.exit(unlink(tf))
 #' arrow::write_parquet(df, tf)
 #'
-#' pqarray <- ParquetArray(tf, dimensions = c("Class", "Sex", "Age", "Survived"), value = "fate")
+#' pqarray <- ParquetArray(tf, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
 #'
 #' @aliases
 #' ParquetArray-class
@@ -49,7 +49,7 @@ setMethod("arrow_query", "ParquetArray", function(x) arrow_query(seed(x)))
 #' @export
 setMethod("[", "ParquetArray", function(x, i, j, ..., drop = TRUE) {
     Nindex <- S4Arrays:::extract_Nindex_from_syscall(sys.call(), parent.frame())
-    initialize(x, seed = .subset_ParquetArraySeed(seed(x), Nindex))
+    initialize(x, seed = .subset_ParquetArraySeed(seed(x), Nindex = Nindex, drop = drop))
 })
 
 #' @export
@@ -66,9 +66,9 @@ setMethod("t", "ParquetArray", function(x) {
 
 #' @export
 #' @rdname ParquetArray
-ParquetArray <- function(data, dimensions, value, type = NULL, ...) {
+ParquetArray <- function(data, key, value, type = NULL, ...) {
     if (!is(data, "ParquetArraySeed")) {
-        data <- ParquetArraySeed(data, dimensions = dimensions, value = value, type = type, ...)
+        data <- ParquetArraySeed(data, key = key, value = value, type = type, ...)
     }
     new("ParquetArray", seed = data)
 }

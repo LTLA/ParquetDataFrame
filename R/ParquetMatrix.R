@@ -15,9 +15,9 @@
 #' @param col Either a character vector or a named list of character vectors
 #' containing the names of the columns in the Parquet data that specify the
 #' columns of the matrix.
-#' @param dimensions Either a character vector or a named list of character
-#' vectors containing the names of the columns in the Parquet data that specify
-#' the rows and columns of the matrix.
+#' @param key Either a character vector or a named list of character vectors
+#' containing the names of the columns in the Parquet data that specify the
+#' rows and columns of the matrix.
 #' @param value String containing the name of the column in the Parquet data
 #' that specifies the value of the matrix.
 #' @param type String specifying the type of the Parquet data values;
@@ -51,6 +51,7 @@
 #' t,ParquetMatrix-method
 #'
 #' @include ParquetArraySeed.R
+#' @include ParquetArray.R
 #'
 #' @name ParquetMatrix
 NULL
@@ -60,8 +61,8 @@ NULL
 setClass("ParquetMatrix", contains = "DelayedMatrix", slots = c(seed = "ParquetArraySeed"))
 
 setValidity2("ParquetMatrix", function(x) {
-    if (length(seed(x)@dimensions) != 2L) {
-        return("'dimensions' seed slot must be a two element named list of character vectors")
+    if (length(seed(x)@key) != 2L) {
+        return("'key' seed slot must be a two element named list of character vectors")
     }
     TRUE
 })
@@ -73,7 +74,13 @@ setMethod("arrow_query", "ParquetMatrix", function(x) arrow_query(seed(x)))
 #' @export
 setMethod("[", "ParquetMatrix", function(x, i, j, ..., drop = TRUE) {
     Nindex <- S4Arrays:::extract_Nindex_from_syscall(sys.call(), parent.frame())
-    initialize(x, seed = .subset_ParquetArraySeed(seed(x), Nindex))
+    x <- initialize(x, seed = .subset_ParquetArraySeed(seed(x), Nindex = Nindex, drop = drop))
+    if (drop && (any(dim(x) == 1L))) {
+        data <- seed(x)
+        key <- data@key[dim(x) != 1L]
+        x <- ParquetArray(data, key = key, value = data@value, type = data@type)
+    }
+    x
 })
 
 #' @export
@@ -91,12 +98,12 @@ setMethod("t", "ParquetMatrix", function(x) {
 #' @export
 #' @importFrom S4Vectors isSingleString
 #' @rdname ParquetMatrix
-ParquetMatrix <- function(data, row, col, value, dimensions = c(row, col), type = NULL, ...) {
+ParquetMatrix <- function(data, row, col, value, key = c(row, col), type = NULL, ...) {
     if (!is(data, "ParquetArraySeed")) {
-        if (length(dimensions) != 2L) {
-            stop("'dimensions' must contain exactly 2 elements: rows and columns")
+        if (length(key) != 2L) {
+            stop("'key' must contain exactly 2 elements: rows and columns")
         }
-        data <- ParquetArraySeed(data, dimensions = dimensions, value = value, type = type, ...)
+        data <- ParquetArraySeed(data, key = key, value = value, type = type, ...)
     }
     new("ParquetMatrix", seed = data)
 }
