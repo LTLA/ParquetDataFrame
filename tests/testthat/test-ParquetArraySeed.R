@@ -76,3 +76,29 @@ test_that("extraction methods work as expected for a ParquetArraySeed", {
     expect_identical(dimnames(object), dimnames(expected))
     expect_identical(as.array(object), expected)
 })
+
+test_that("aperm and t methods work as expected for a ParquetArraySeed", {
+    seed <- ParquetArraySeed(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
+
+    object <- aperm(seed, c(4, 2, 1, 3))
+    expected <- aperm(titanic_array, c(4, 2, 1, 3))
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), "integer")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_identical(as.array(object), expected)
+
+    names(dimnames(state.x77)) <- c("rowname", "colname")
+    seed <- ParquetArraySeed(state_path, key = c("rowname", "colname"), value = "value")
+
+    object <- t(seed)
+    expected <- t(state.x77)
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), "double")
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object)[[1L]], dimnames(expected)[[1L]])
+    expect_setequal(dimnames(object)[[2L]], dimnames(expected)[[2L]])
+    expect_identical(as.array(object)[, colnames(expected)], expected)
+})
