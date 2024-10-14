@@ -179,8 +179,32 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
         stop("'index' must be a list")
     } else if (all(vapply(index, is.null, logical(1L)))) {
         index <- as.list(x@key)
-    } else if (length(index) == length(x@key)) {
-        names(index) <- names(x@key)
+    } else {
+        # Add names to index list
+        if (length(index) == length(x@key)) {
+            names(index) <- names(x@key)
+        } else if (length(index) == length(dimnames(x))) {
+            names(index) <- names(dimnames(x))
+        }
+
+        if (!is.null(names(index))) {
+            # Replace NULL and integer values with strings
+            for (i in names(index)) {
+                idx <- index[[i]]
+                if (is.null(idx)) {
+                    index[[i]] <- x@key[[i]]
+                } else {
+                    index[[i]] <- x@key[[i]][idx]
+                }
+            }
+
+            # Add dropped dimensions if data are present
+            if ((length(index) < length(x@key)) && all(lengths(index, use.names = FALSE) > 0L)) {
+                key <- as.list(x@key)
+                key[names(index)] <- index
+                index <- key
+            }
+        }
     }
 
     # Initialize output array
@@ -190,21 +214,11 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
         return(output)
     }
 
-    # Extract query
+    # Add filters to query
     query <- arrow_query(x)
-
-    # Add key filters
-    for (i in seq_along(index)) {
-        idx <- index[[i]]
-        if (is.null(idx)) {
-            index[[i]] <- x@key[[i]]
-        } else if (is.numeric(idx)) {
-            index[[i]] <- x@key[[i]][idx]
-        }
-        query <- filter(query, !!as.name(names(x@key)[i]) %in% index[[i]])
+    for (i in names(index)) {
+        query <- filter(query, !!as.name(i) %in% index[[i]])
     }
-
-    # Add defualt value filter
     query <- switch(x@type,
                     logical = filter(query, !(!!as.name(x@value))),
                     integer = filter(query, !!as.name(x@value) != 0L),
@@ -222,7 +236,7 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
     dimnames(output) <- index
     output[as.matrix(key)] <- df[[x@value]]
     if (x@drop) {
-        output <- drop(output)
+        output <- as.array(drop(output))
     }
 
     output

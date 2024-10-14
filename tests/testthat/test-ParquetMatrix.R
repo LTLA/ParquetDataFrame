@@ -1,15 +1,6 @@
 # Tests the basic functions of a ParquetMatrix.
 # library(testthat); library(ParquetDataFrame); source("setup.R"); source("test-ParquetMatrix.R")
 
-checkParquetMatrix <- function(object, expected) {
-    expect_s4_class(object, "ParquetMatrix")
-    expect_identical(type(object), typeof(expected))
-    expect_identical(length(object), length(expected))
-    expect_identical(dim(object), dim(expected))
-    expect_identical(dimnames(object), dimnames(expected))
-    expect_equal(as.matrix(object), expected)
-}
-
 test_that("basic methods work as expected for a ParquetMatrix", {
     names(dimnames(state.x77)) <- c("rowname", "colname")
 
@@ -30,16 +21,46 @@ test_that("basic methods work as expected for a ParquetMatrix", {
     checkParquetMatrix(pqmat, state.x77)
 })
 
+test_that("extraction methods work as expected for a ParquetMatrix", {
+    names(dimnames(state.x77)) <- c("rowname", "colname")
+
+    pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
+
+    expected <- as.array(state.x77[1, ])
+    names(dimnames(expected)) <- "colname"
+    checkParquetArray(pqmat[1, ], expected)
+    checkParquetMatrix(pqmat[1, , drop = FALSE], state.x77[1, , drop = FALSE])
+
+    expected <- as.array(state.x77["New Jersey", ])
+    names(dimnames(expected)) <- "colname"
+    checkParquetArray(pqmat["New Jersey", ], expected)
+    checkParquetMatrix(pqmat["New Jersey", , drop = FALSE], state.x77["New Jersey", , drop = FALSE])
+
+    checkParquetMatrix(pqmat[c("New Jersey", "Washington"), ], state.x77[c("New Jersey", "Washington"), ])
+
+    expected <- as.array(state.x77[, 4])
+    names(dimnames(expected)) <- "rowname"
+    checkParquetArray(pqmat[, 4], expected)
+    checkParquetMatrix(pqmat[, 4, drop = FALSE], state.x77[, 4, drop = FALSE])
+
+    expected <- as.array(state.x77[, "Murder"])
+    names(dimnames(expected)) <- "rowname"
+    checkParquetArray(pqmat[, "Murder"], expected)
+    checkParquetMatrix(pqmat[, "Murder", drop = FALSE], state.x77[, "Murder", drop = FALSE])
+
+    checkParquetMatrix(pqmat[, c("Income", "Life Exp", "Murder")], state.x77[, c("Income", "Life Exp", "Murder")])
+
+    checkParquetMatrix(pqmat[c(13, 7), c(1, 3, 5, 7)], state.x77[c(13, 7), c(1, 3, 5, 7)])
+    checkParquetMatrix(pqmat[c("New Jersey", "Washington"), c("Income", "Life Exp", "Murder")],
+                       state.x77[c("New Jersey", "Washington"), c("Income", "Life Exp", "Murder")])
+})
+
 test_that("aperm and t methods work as expected for a ParquetMatrix", {
     names(dimnames(state.x77)) <- c("rowname", "colname")
 
     pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
 
-    object <- aperm(pqmat, c(2, 1))
-    expected <- aperm(state.x77, c(2, 1))
-    checkParquetMatrix(object, expected)
+    checkParquetMatrix(aperm(pqmat, c(2, 1)), aperm(state.x77, c(2, 1)))
 
-    object <- t(pqmat)
-    expected <- t(state.x77)
-    checkParquetMatrix(object, expected)
+    checkParquetMatrix(t(pqmat), t(state.x77))
 })

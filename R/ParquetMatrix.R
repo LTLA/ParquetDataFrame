@@ -47,8 +47,6 @@
 #' @aliases
 #' ParquetMatrix-class
 #' [,ParquetMatrix,ANY,ANY,ANY-method
-#' aperm,ParquetMatrix-method
-#' t,ParquetMatrix-method
 #'
 #' @include ParquetArraySeed.R
 #' @include ParquetArray.R
@@ -58,7 +56,7 @@ NULL
 
 #' @export
 #' @importClassesFrom DelayedArray DelayedMatrix
-setClass("ParquetMatrix", contains = "DelayedMatrix", slots = c(seed = "ParquetArraySeed"))
+setClass("ParquetMatrix", contains = c("ParquetArray", "DelayedMatrix"))
 
 setValidity2("ParquetMatrix", function(x) {
     if (length(seed(x)@key) != 2L) {
@@ -68,31 +66,19 @@ setValidity2("ParquetMatrix", function(x) {
 })
 
 #' @export
-#' @importFrom DelayedArray seed
-setMethod("arrow_query", "ParquetMatrix", function(x) arrow_query(seed(x)))
-
-#' @export
 setMethod("[", "ParquetMatrix", function(x, i, j, ..., drop = TRUE) {
     Nindex <- S4Arrays:::extract_Nindex_from_syscall(sys.call(), parent.frame())
-    x <- initialize(x, seed = .subset_ParquetArraySeed(seed(x), Nindex = Nindex, drop = drop))
-    if (drop && (any(dim(x) == 1L))) {
-        data <- seed(x)
-        key <- data@key[dim(x) != 1L]
-        x <- ParquetArray(data, key = key, value = data@value, type = data@type)
+    seed <- .subset_ParquetArraySeed(seed(x), Nindex = Nindex, drop = drop)
+    if (length(dim(seed)) == 1L) {
+        ParquetArray(seed)
+    } else {
+        initialize(x, seed = seed)
     }
-    x
 })
 
-#' @export
-#' @importFrom BiocGenerics aperm
-setMethod("aperm", "ParquetMatrix", function(a, perm, ...) {
-    initialize(a, seed = aperm(seed(a), perm = perm, ...))
-})
-
-#' @export
-#' @importFrom BiocGenerics t
-setMethod("t", "ParquetMatrix", function(x) {
-    initialize(x, seed = t(seed(x)))
+setMethod("[", "ParquetArray", function(x, i, j, ..., drop = TRUE) {
+    Nindex <- S4Arrays:::extract_Nindex_from_syscall(sys.call(), parent.frame())
+    initialize(x, seed = .subset_ParquetArraySeed(seed(x), Nindex = Nindex, drop = drop))
 })
 
 #' @export

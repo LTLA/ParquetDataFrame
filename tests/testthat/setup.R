@@ -25,3 +25,31 @@ infert_path <- tempfile()
 infert_df <- infert
 infert_df$education <- as.character(infert_df$education)
 arrow::write_parquet(infert_df, infert_path)
+
+# Helper functions
+checkParquetArraySeed <- function(object, expected) {
+    expect_s4_class(object, "ParquetArraySeed")
+    expect_identical(type(object), type(expected))
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_equal(as.array(object), expected)
+}
+
+checkParquetArray <- function(object, expected) {
+    expect_s4_class(object, "ParquetArray")
+    expect_identical(type(object), type(expected))
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_equal(as.array(object), expected)
+}
+
+checkParquetMatrix <- function(object, expected) {
+    expect_s4_class(object, "ParquetMatrix")
+    expect_identical(type(object), typeof(expected))
+    expect_identical(length(object), length(expected))
+    expect_identical(dim(object), dim(expected))
+    expect_identical(dimnames(object), dimnames(expected))
+    expect_equal(as.matrix(object), expected)
+}

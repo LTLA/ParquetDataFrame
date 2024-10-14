@@ -1,15 +1,6 @@
 # Tests the basic functions of a ParquetArraySeed.
 # library(testthat); library(ParquetDataFrame); source("setup.R"); source("test-ParquetArraySeed.R")
 
-checkParquetArraySeed <- function(object, expected) {
-    expect_s4_class(object, "ParquetArraySeed")
-    expect_identical(type(object), type(expected))
-    expect_identical(length(object), length(expected))
-    expect_identical(dim(object), dim(expected))
-    expect_identical(dimnames(object), dimnames(expected))
-    expect_equal(as.array(object), expected)
-}
-
 test_that("basic methods work as expected for a ParquetArraySeed", {
     seed <- ParquetArraySeed(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
     checkParquetArraySeed(seed, titanic_array)
@@ -48,6 +39,14 @@ test_that("extraction methods work as expected for a ParquetArraySeed", {
 
     object <- seed[c(4, 2), , 1, , drop = FALSE]
     expected <- titanic_array[c(4, 2), , 1, , drop = FALSE]
+    checkParquetArraySeed(object, expected)
+
+    object <- seed[4, 2, 1, 2]
+    expected <- as.array(titanic_array[4, 2, 1, 2])
+    checkParquetArraySeed(object, expected)
+
+    object <- seed[4, 2, 1, 2, drop = FALSE]
+    expected <- titanic_array[4, 2, 1, 2, drop = FALSE]
     checkParquetArraySeed(object, expected)
 
     object <- seed[c("1st", "2nd", "3rd"), "Female", "Child", ]

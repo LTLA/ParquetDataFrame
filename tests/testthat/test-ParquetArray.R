@@ -1,15 +1,6 @@
 # Tests the basic functions of a ParquetArray.
 # library(testthat); library(ParquetDataFrame); source("setup.R"); source("test-ParquetArray.R")
 
-checkParquetArray <- function(object, expected) {
-    expect_s4_class(object, "ParquetArray")
-    expect_identical(type(object), type(expected))
-    expect_identical(length(object), length(expected))
-    expect_identical(dim(object), dim(expected))
-    expect_identical(dimnames(object), dimnames(expected))
-    expect_equal(as.array(object), expected)
-}
-
 test_that("basic methods work as expected for a ParquetArray", {
     pqarray <- ParquetArray(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
     checkParquetArray(pqarray, titanic_array)
@@ -48,6 +39,14 @@ test_that("extraction methods work as expected for a ParquetArray", {
 
     object <- pqarray[c(4, 2), , 1, , drop = FALSE]
     expected <- titanic_array[c(4, 2), , 1, , drop = FALSE]
+    checkParquetArray(object, expected)
+
+    object <- pqarray[4, 2, 1, 2]
+    expected <- as.array(titanic_array[4, 2, 1, 2])
+    checkParquetArray(object, expected)
+
+    object <- pqarray[4, 2, 1, 2, drop = FALSE]
+    expected <- titanic_array[4, 2, 1, 2, drop = FALSE]
     checkParquetArray(object, expected)
 
     object <- pqarray[c("1st", "2nd", "3rd"), "Female", "Child", ]
