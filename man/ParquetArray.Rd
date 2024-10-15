@@ -6,6 +6,13 @@
 \alias{[,ParquetArray,ANY,ANY,ANY-method}
 \alias{aperm,ParquetArray-method}
 \alias{t,ParquetArray-method}
+\alias{Arith,ParquetArray,ParquetArray-method}
+\alias{Arith,ParquetArray,numeric-method}
+\alias{Arith,numeric,ParquetArray-method}
+\alias{Compare,ParquetArray,ParquetArray-method}
+\alias{Compare,ParquetArray,numeric-method}
+\alias{Compare,numeric,ParquetArray-method}
+\alias{Logic,ParquetArray,ParquetArray-method}
 \alias{Math,ParquetArray-method}
 \title{Parquet datasets as DelayedArray objects}
 \usage{

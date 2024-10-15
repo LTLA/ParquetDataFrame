@@ -62,6 +62,117 @@ test_that("aperm and t methods work as expected for a ParquetMatrix", {
     checkParquetMatrix(t(pqmat), t(state.x77))
 })
 
+test_that("Arith methods work as expected for a ParquetMatrix", {
+    pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
+
+    ## "+"
+    checkParquetMatrix(pqmat + sqrt(pqmat), as.array(pqmat) + sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat + 1L, as.array(pqmat) + 1L)
+    checkParquetMatrix(pqmat + 3.14, as.array(pqmat) + 3.14)
+    checkParquetMatrix(1L + pqmat, 1L + as.array(pqmat))
+    checkParquetMatrix(3.14 + pqmat, 3.14 + as.array(pqmat))
+
+    ## "-"
+    checkParquetMatrix(pqmat - sqrt(pqmat), as.array(pqmat) - sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat - 1L, as.array(pqmat) - 1L)
+    checkParquetMatrix(pqmat - 3.14, as.array(pqmat) - 3.14)
+    checkParquetMatrix(1L - pqmat, 1L - as.array(pqmat))
+    checkParquetMatrix(3.14 - pqmat, 3.14 - as.array(pqmat))
+
+    ## "*"
+    checkParquetMatrix(pqmat * sqrt(pqmat), as.array(pqmat) * sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat * 1L, as.array(pqmat) * 1L)
+    checkParquetMatrix(pqmat * 3.14, as.array(pqmat) * 3.14)
+    checkParquetMatrix(1L * pqmat, 1L * as.array(pqmat))
+    checkParquetMatrix(3.14 * pqmat, 3.14 * as.array(pqmat))
+
+    ## "/"
+    checkParquetMatrix(pqmat / sqrt(pqmat), as.array(pqmat) / sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat / 1L, as.array(pqmat) / 1L)
+    checkParquetMatrix(pqmat / 3.14, as.array(pqmat) / 3.14)
+    checkParquetMatrix(1L / pqmat, 1L / as.array(pqmat))
+    checkParquetMatrix(3.14 / pqmat, 3.14 / as.array(pqmat))
+
+    ## "^"
+    checkParquetMatrix(pqmat ^ sqrt(pqmat), as.array(pqmat) ^ sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat ^ 3.14, as.array(pqmat) ^ 3.14)
+    checkParquetMatrix(3.14 ^ pqmat, 3.14 ^ as.array(pqmat))
+
+    ## "%%"
+    checkParquetMatrix(pqmat %% sqrt(pqmat), as.array(pqmat) %% sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat %% 1L, as.array(pqmat) %% 1L)
+    checkParquetMatrix(pqmat %% 3.14, as.array(pqmat) %% 3.14)
+    checkParquetMatrix(1L %% pqmat, 1L %% as.array(pqmat))
+    checkParquetMatrix(3.14 %% pqmat, 3.14 %% as.array(pqmat))
+
+    ## "%/%"
+    checkParquetMatrix(pqmat %/% sqrt(pqmat), as.array(pqmat) %/% sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat %/% 1L, as.array(pqmat) %/% 1L)
+    checkParquetMatrix(pqmat %/% 3.14, as.array(pqmat) %/% 3.14)
+    checkParquetMatrix(1L %/% pqmat, 1L %/% as.array(pqmat))
+    checkParquetMatrix(3.14 %/% pqmat, 3.14 %/% as.array(pqmat))
+})
+
+test_that("Compare methods work as expected for a ParquetMatrix", {
+    pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
+
+    ## "=="
+    checkParquetMatrix(pqmat == sqrt(pqmat), as.array(pqmat) == sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat == 1L, as.array(pqmat) == 1L)
+    checkParquetMatrix(pqmat == 3.14, as.array(pqmat) == 3.14)
+    checkParquetMatrix(1L == pqmat, 1L == as.array(pqmat))
+    checkParquetMatrix(3.14 == pqmat, 3.14 == as.array(pqmat))
+
+    ## ">"
+    checkParquetMatrix(pqmat > sqrt(pqmat), as.array(pqmat) > sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat > 1L, as.array(pqmat) > 1L)
+    checkParquetMatrix(pqmat > 3.14, as.array(pqmat) > 3.14)
+    checkParquetMatrix(1L > pqmat, 1L > as.array(pqmat))
+    checkParquetMatrix(3.14 > pqmat, 3.14 > as.array(pqmat))
+
+    ## "<"
+    checkParquetMatrix(pqmat < sqrt(pqmat), as.array(pqmat) < sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat < 1L, as.array(pqmat) < 1L)
+    checkParquetMatrix(pqmat < 3.14, as.array(pqmat) < 3.14)
+    checkParquetMatrix(1L < pqmat, 1L < as.array(pqmat))
+    checkParquetMatrix(3.14 < pqmat, 3.14 < as.array(pqmat))
+
+    ## "!="
+    checkParquetMatrix(pqmat != sqrt(pqmat), as.array(pqmat) != sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat != 1L, as.array(pqmat) != 1L)
+    checkParquetMatrix(pqmat != 3.14, as.array(pqmat) != 3.14)
+    checkParquetMatrix(1L != pqmat, 1L != as.array(pqmat))
+    checkParquetMatrix(3.14 != pqmat, 3.14 != as.array(pqmat))
+
+    ## "<="
+    checkParquetMatrix(pqmat <= sqrt(pqmat), as.array(pqmat) <= sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat <= 1L, as.array(pqmat) <= 1L)
+    checkParquetMatrix(pqmat <= 3.14, as.array(pqmat) <= 3.14)
+    checkParquetMatrix(1L <= pqmat, 1L <= as.array(pqmat))
+    checkParquetMatrix(3.14 <= pqmat, 3.14 <= as.array(pqmat))
+
+    ## ">="
+    checkParquetMatrix(pqmat >= sqrt(pqmat), as.array(pqmat) >= sqrt(as.array(pqmat)))
+    checkParquetMatrix(pqmat >= 1L, as.array(pqmat) >= 1L)
+    checkParquetMatrix(pqmat >= 3.14, as.array(pqmat) >= 3.14)
+    checkParquetMatrix(1L >= pqmat, 1L >= as.array(pqmat))
+    checkParquetMatrix(3.14 >= pqmat, 3.14 >= as.array(pqmat))
+})
+
+test_that("Logic methods work as expected for a ParquetMatrix", {
+    pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
+
+    ## "&"
+    x <- pqmat > 70
+    y <- pqmat < 4000
+    checkParquetMatrix(x & y, as.array(x) & as.array(y))
+
+    ## "|"
+    x <- pqmat > 70
+    y <- sqrt(pqmat) > 0
+    checkParquetMatrix(x | y, as.array(x) | as.array(y))
+})
+
 test_that("Math methods work as expected for a ParquetMatrix", {
     pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
 

@@ -75,6 +75,117 @@ test_that("aperm and t methods work as expected for a ParquetArray", {
     expect_identical(as.array(object)[, colnames(expected)], expected)
 })
 
+test_that("Arith methods work as expected for a ParquetArray", {
+    pqarray <- ParquetArray(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
+
+    ## "+"
+    checkParquetArray(pqarray + sqrt(pqarray), as.array(pqarray) + sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray + 1L, as.array(pqarray) + 1L)
+    checkParquetArray(pqarray + 3.14, as.array(pqarray) + 3.14)
+    checkParquetArray(1L + pqarray, 1L + as.array(pqarray))
+    checkParquetArray(3.14 + pqarray, 3.14 + as.array(pqarray))
+
+    ## "-"
+    checkParquetArray(pqarray - sqrt(pqarray), as.array(pqarray) - sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray - 1L, as.array(pqarray) - 1L)
+    checkParquetArray(pqarray - 3.14, as.array(pqarray) - 3.14)
+    checkParquetArray(1L - pqarray, 1L - as.array(pqarray))
+    checkParquetArray(3.14 - pqarray, 3.14 - as.array(pqarray))
+
+    ## "*"
+    checkParquetArray(pqarray * sqrt(pqarray), as.array(pqarray) * sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray * 1L, as.array(pqarray) * 1L)
+    checkParquetArray(pqarray * 3.14, as.array(pqarray) * 3.14)
+    checkParquetArray(1L * pqarray, 1L * as.array(pqarray))
+    checkParquetArray(3.14 * pqarray, 3.14 * as.array(pqarray))
+
+    ## "/"
+    checkParquetArray(pqarray / sqrt(pqarray), as.array(pqarray) / sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray / 1L, as.array(pqarray) / 1L)
+    checkParquetArray(pqarray / 3.14, as.array(pqarray) / 3.14)
+    checkParquetArray(1L / pqarray, 1L / as.array(pqarray))
+    checkParquetArray(3.14 / pqarray, 3.14 / as.array(pqarray))
+
+    ## "^"
+    checkParquetArray(pqarray ^ sqrt(pqarray), as.array(pqarray) ^ sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray ^ 3.14, as.array(pqarray) ^ 3.14)
+    checkParquetArray(3.14 ^ pqarray, 3.14 ^ as.array(pqarray))
+
+    ## "%%"
+    checkParquetArray(pqarray %% sqrt(pqarray), as.array(pqarray) %% sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray %% 1L, as.array(pqarray) %% 1L)
+    checkParquetArray(pqarray %% 3.14, as.array(pqarray) %% 3.14)
+    checkParquetArray(1L %% pqarray, 1L %% as.array(pqarray))
+    checkParquetArray(3.14 %% pqarray, 3.14 %% as.array(pqarray))
+
+    ## "%/%"
+    checkParquetArray(pqarray %/% sqrt(pqarray), as.array(pqarray) %/% sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray %/% 1L, as.array(pqarray) %/% 1L)
+    checkParquetArray(pqarray %/% 3.14, as.array(pqarray) %/% 3.14)
+    checkParquetArray(1L %/% pqarray, 1L %/% as.array(pqarray))
+    checkParquetArray(3.14 %/% pqarray, 3.14 %/% as.array(pqarray))
+})
+
+test_that("Compare methods work as expected for a ParquetArray", {
+    pqarray <- ParquetArray(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
+
+    ## "=="
+    checkParquetArray(pqarray == sqrt(pqarray), as.array(pqarray) == sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray == 1L, as.array(pqarray) == 1L)
+    checkParquetArray(pqarray == 3.14, as.array(pqarray) == 3.14)
+    checkParquetArray(1L == pqarray, 1L == as.array(pqarray))
+    checkParquetArray(3.14 == pqarray, 3.14 == as.array(pqarray))
+
+    ## ">"
+    checkParquetArray(pqarray > sqrt(pqarray), as.array(pqarray) > sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray > 1L, as.array(pqarray) > 1L)
+    checkParquetArray(pqarray > 3.14, as.array(pqarray) > 3.14)
+    checkParquetArray(1L > pqarray, 1L > as.array(pqarray))
+    checkParquetArray(3.14 > pqarray, 3.14 > as.array(pqarray))
+
+    ## "<"
+    checkParquetArray(pqarray < sqrt(pqarray), as.array(pqarray) < sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray < 1L, as.array(pqarray) < 1L)
+    checkParquetArray(pqarray < 3.14, as.array(pqarray) < 3.14)
+    checkParquetArray(1L < pqarray, 1L < as.array(pqarray))
+    checkParquetArray(3.14 < pqarray, 3.14 < as.array(pqarray))
+
+    ## "!="
+    checkParquetArray(pqarray != sqrt(pqarray), as.array(pqarray) != sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray != 1L, as.array(pqarray) != 1L)
+    checkParquetArray(pqarray != 3.14, as.array(pqarray) != 3.14)
+    checkParquetArray(1L != pqarray, 1L != as.array(pqarray))
+    checkParquetArray(3.14 != pqarray, 3.14 != as.array(pqarray))
+
+    ## "<="
+    checkParquetArray(pqarray <= sqrt(pqarray), as.array(pqarray) <= sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray <= 1L, as.array(pqarray) <= 1L)
+    checkParquetArray(pqarray <= 3.14, as.array(pqarray) <= 3.14)
+    checkParquetArray(1L <= pqarray, 1L <= as.array(pqarray))
+    checkParquetArray(3.14 <= pqarray, 3.14 <= as.array(pqarray))
+
+    ## ">="
+    checkParquetArray(pqarray >= sqrt(pqarray), as.array(pqarray) >= sqrt(as.array(pqarray)))
+    checkParquetArray(pqarray >= 1L, as.array(pqarray) >= 1L)
+    checkParquetArray(pqarray >= 3.14, as.array(pqarray) >= 3.14)
+    checkParquetArray(1L >= pqarray, 1L >= as.array(pqarray))
+    checkParquetArray(3.14 >= pqarray, 3.14 >= as.array(pqarray))
+})
+
+test_that("Logic methods work as expected for a ParquetArray", {
+    pqarray <- ParquetArray(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
+
+    ## "&"
+    x <- pqarray > 70
+    y <- pqarray < 4000
+    checkParquetArray(x & y, as.array(x) & as.array(y))
+
+    ## "|"
+    x <- pqarray > 70
+    y <- sqrt(pqarray) > 0
+    checkParquetArray(x | y, as.array(x) | as.array(y))
+})
+
 test_that("Math methods work as expected for a ParquetArray", {
     pqarray <- ParquetArray(state_path, key = list("rowname" = row.names(state.x77), "colname" = colnames(state.x77)), value = "value")
 
