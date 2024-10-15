@@ -172,6 +172,20 @@ test_that("Compare methods work as expected for a ParquetArraySeed", {
     checkParquetArraySeed(3.14 >= seed, 3.14 >= as.array(seed))
 })
 
+test_that("Logic methods work as expected for a ParquetArraySeed", {
+    seed <- ParquetArraySeed(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
+
+    ## "&"
+    x <- seed > 70
+    y <- seed < 4000
+    checkParquetArraySeed(x & y, as.array(x) & as.array(y))
+
+    ## "|"
+    x <- seed > 70
+    y <- sqrt(seed) > 0
+    checkParquetArraySeed(x | y, as.array(x) | as.array(y))
+})
+
 test_that("Math methods work as expected for a ParquetArraySeed", {
     seed <- ParquetArraySeed(state_path, key = list("rowname" = row.names(state.x77), "colname" = colnames(state.x77)), value = "value")
 
