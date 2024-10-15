@@ -74,3 +74,67 @@ test_that("aperm and t methods work as expected for a ParquetArraySeed", {
     expect_setequal(dimnames(object)[[2L]], dimnames(expected)[[2L]])
     expect_identical(as.array(object)[, colnames(expected)], expected)
 })
+
+test_that("Math methods work as expected for a ParquetArraySeed", {
+    seed <- ParquetArraySeed(state_path, key = list("rowname" = row.names(state.x77), "colname" = colnames(state.x77)), value = "value")
+
+    income <- seed[, "Income"]
+    ikeep <-
+      c("Colorado", "Delaware", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas",
+        "Maine", "Maryland", "Michigan", "Minnesota", "Missouri", "Montana",
+        "Nebraska", "Nevada", "New Hampshire", "North Dakota", "Ohio", "Oregon",
+        "Pennsylvania", "South Dakota", "Utah", "Vermont", "Washington", "Wisconsin",
+        "Wyoming")
+    illiteracy <- seed[ikeep, "Illiteracy"]
+
+    checkParquetArraySeed(abs(income), abs(as.array(income)))
+    checkParquetArraySeed(sign(income), sign(as.array(income)))
+    checkParquetArraySeed(sqrt(income), sqrt(as.array(income)))
+    checkParquetArraySeed(ceiling(income), ceiling(as.array(income)))
+    checkParquetArraySeed(floor(income), floor(as.array(income)))
+    checkParquetArraySeed(trunc(income), trunc(as.array(income)))
+
+    expect_error(cummax(income))
+    expect_error(cummin(income))
+    expect_error(cumprod(income))
+    expect_error(cumsum(income))
+
+    checkParquetArraySeed(log(income), log(as.array(income)))
+    checkParquetArraySeed(log10(income), log10(as.array(income)))
+    checkParquetArraySeed(log2(income), log2(as.array(income)))
+    checkParquetArraySeed(log1p(income), log1p(as.array(income)))
+
+    checkParquetArraySeed(acos(illiteracy), acos(as.array(illiteracy)))
+
+    expect_error(acosh(illiteracy))
+
+    checkParquetArraySeed(asin(illiteracy), asin(as.array(illiteracy)))
+
+    expect_error(asinh(illiteracy))
+    expect_error(atan(illiteracy))
+    expect_error(atanh(illiteracy))
+
+    checkParquetArraySeed(exp(income), exp(as.array(income)))
+
+    expect_error(expm1(income))
+
+    checkParquetArraySeed(cos(income), cos(as.array(income)))
+
+    expect_error(cosh(income))
+    expect_error(cospi(income))
+
+    checkParquetArraySeed(sin(income), sin(as.array(income)))
+
+    expect_error(sinh(income))
+    expect_error(sinpi(income))
+
+    checkParquetArraySeed(tan(income), tan(as.array(income)))
+
+    expect_error(tanh(income))
+    expect_error(tanpi(income))
+
+    expect_error(gamma(income))
+    expect_error(lgamma(income))
+    expect_error(digamma(income))
+    expect_error(trigamma(income))
+})

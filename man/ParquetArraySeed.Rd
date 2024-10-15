@@ -11,6 +11,7 @@
 \alias{extract_array,ParquetArraySeed-method}
 \alias{t,ParquetArraySeed-method}
 \alias{type,ParquetArraySeed-method}
+\alias{Math,ParquetArraySeed-method}
 \title{ParquetArraySeed objects}
 \usage{
 ParquetArraySeed(data, key, value, type = NULL, ...)

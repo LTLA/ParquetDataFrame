@@ -47,6 +47,7 @@
 #' extract_array,ParquetArraySeed-method
 #' t,ParquetArraySeed-method
 #' type,ParquetArraySeed-method
+#' Math,ParquetArraySeed-method
 #'
 #' @seealso
 #' \code{\link{ParquetArray}},
@@ -171,6 +172,35 @@ setMethod("[", "ParquetArraySeed", function(x, i, j, ..., drop = TRUE) {
 })
 
 #' @export
+#' @importFrom dplyr mutate select
+setMethod("Math", "ParquetArraySeed", function(x) {
+    query <- arrow_query(x)
+    name <- as.name(x@value)
+    query <-
+      switch(.Generic,
+             abs = mutate(query, .x. = abs(!!name)),
+             sign = mutate(query, .x. = sign(!!name)),
+             sqrt = mutate(query, .x. = sqrt(!!name)),
+             ceiling = mutate(query, .x. = ceiling(!!name)),
+             floor = mutate(query, .x. = floor(!!name)),
+             trunc = mutate(query, .x. = trunc(!!name)),
+             log = mutate(query, .x. = log(!!name)),
+             log10 = mutate(query, .x. = log10(!!name)),
+             log2 = mutate(query, .x. = log2(!!name)),
+             log1p = mutate(query, .x. = log1p(!!name)),
+             acos = mutate(query, .x. = acos(!!name)),
+             asin = mutate(query, .x. = asin(!!name)),
+             exp = mutate(query, .x. = exp(!!name)),
+             cos = mutate(query, .x. = cos(!!name)),
+             sin = mutate(query, .x. = sin(!!name)),
+             tan = mutate(query, .x. = tan(!!name)),
+             stop("unsupported Math operator: ", .Generic))
+    query <- select(query, c(names(x@key), ".x."))
+    type <- .getColumnType(query)
+    initialize(x, query = query, value = ".x.", type = type)
+})
+
+#' @export
 #' @importFrom DelayedArray extract_array
 #' @importFrom dplyr filter
 setMethod("extract_array", "ParquetArraySeed", function(x, index) {
@@ -219,11 +249,6 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
     for (i in names(index)) {
         query <- filter(query, !!as.name(i) %in% index[[i]])
     }
-    query <- switch(x@type,
-                    logical = filter(query, !(!!as.name(x@value))),
-                    integer = filter(query, !!as.name(x@value) != 0L),
-                    double = filter(query, !!as.name(x@value) != 0),
-                    character = filter(query, !!as.name(x@value) != ""))
 
     # Execute query
     df <- as.data.frame(query)
