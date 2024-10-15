@@ -126,6 +126,52 @@ test_that("Arith methods work as expected for a ParquetArraySeed", {
     checkParquetArraySeed(3.14 %/% seed, 3.14 %/% as.array(seed))
 })
 
+test_that("Compare methods work as expected for a ParquetArraySeed", {
+    seed <- ParquetArraySeed(titanic_path, key = c("Class", "Sex", "Age", "Survived"), value = "fate")
+
+    ## "=="
+    checkParquetArraySeed(seed == sqrt(seed), as.array(seed) == sqrt(as.array(seed)))
+    checkParquetArraySeed(seed == 1L, as.array(seed) == 1L)
+    checkParquetArraySeed(seed == 3.14, as.array(seed) == 3.14)
+    checkParquetArraySeed(1L == seed, 1L == as.array(seed))
+    checkParquetArraySeed(3.14 == seed, 3.14 == as.array(seed))
+
+    ## ">"
+    checkParquetArraySeed(seed > sqrt(seed), as.array(seed) > sqrt(as.array(seed)))
+    checkParquetArraySeed(seed > 1L, as.array(seed) > 1L)
+    checkParquetArraySeed(seed > 3.14, as.array(seed) > 3.14)
+    checkParquetArraySeed(1L > seed, 1L > as.array(seed))
+    checkParquetArraySeed(3.14 > seed, 3.14 > as.array(seed))
+
+    ## "<"
+    checkParquetArraySeed(seed < sqrt(seed), as.array(seed) < sqrt(as.array(seed)))
+    checkParquetArraySeed(seed < 1L, as.array(seed) < 1L)
+    checkParquetArraySeed(seed < 3.14, as.array(seed) < 3.14)
+    checkParquetArraySeed(1L < seed, 1L < as.array(seed))
+    checkParquetArraySeed(3.14 < seed, 3.14 < as.array(seed))
+
+    ## "!="
+    checkParquetArraySeed(seed != sqrt(seed), as.array(seed) != sqrt(as.array(seed)))
+    checkParquetArraySeed(seed != 1L, as.array(seed) != 1L)
+    checkParquetArraySeed(seed != 3.14, as.array(seed) != 3.14)
+    checkParquetArraySeed(1L != seed, 1L != as.array(seed))
+    checkParquetArraySeed(3.14 != seed, 3.14 != as.array(seed))
+
+    ## "<="
+    checkParquetArraySeed(seed <= sqrt(seed), as.array(seed) <= sqrt(as.array(seed)))
+    checkParquetArraySeed(seed <= 1L, as.array(seed) <= 1L)
+    checkParquetArraySeed(seed <= 3.14, as.array(seed) <= 3.14)
+    checkParquetArraySeed(1L <= seed, 1L <= as.array(seed))
+    checkParquetArraySeed(3.14 <= seed, 3.14 <= as.array(seed))
+
+    ## ">="
+    checkParquetArraySeed(seed >= sqrt(seed), as.array(seed) >= sqrt(as.array(seed)))
+    checkParquetArraySeed(seed >= 1L, as.array(seed) >= 1L)
+    checkParquetArraySeed(seed >= 3.14, as.array(seed) >= 3.14)
+    checkParquetArraySeed(1L >= seed, 1L >= as.array(seed))
+    checkParquetArraySeed(3.14 >= seed, 3.14 >= as.array(seed))
+})
+
 test_that("Math methods work as expected for a ParquetArraySeed", {
     seed <- ParquetArraySeed(state_path, key = list("rowname" = row.names(state.x77), "colname" = colnames(state.x77)), value = "value")
 

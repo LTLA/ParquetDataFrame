@@ -14,6 +14,9 @@
 \alias{Arith,ParquetArraySeed,ParquetArraySeed-method}
 \alias{Arith,ParquetArraySeed,numeric-method}
 \alias{Arith,numeric,ParquetArraySeed-method}
+\alias{Compare,ParquetArraySeed,ParquetArraySeed-method}
+\alias{Compare,ParquetArraySeed,numeric-method}
+\alias{Compare,numeric,ParquetArraySeed-method}
 \alias{Math,ParquetArraySeed-method}
 \title{ParquetArraySeed objects}
 \usage{
