@@ -47,6 +47,9 @@
 #' extract_array,ParquetArraySeed-method
 #' t,ParquetArraySeed-method
 #' type,ParquetArraySeed-method
+#' Arith,ParquetArraySeed,ParquetArraySeed-method
+#' Arith,ParquetArraySeed,numeric-method
+#' Arith,numeric,ParquetArraySeed-method
 #' Math,ParquetArraySeed-method
 #'
 #' @seealso
@@ -169,6 +172,66 @@ setMethod("t", "ParquetArraySeed", function(x) {
 setMethod("[", "ParquetArraySeed", function(x, i, j, ..., drop = TRUE) {
     Nindex <- S4Arrays:::extract_Nindex_from_syscall(sys.call(), parent.frame())
     .subset_ParquetArraySeed(x, Nindex = Nindex, drop = drop)
+})
+
+.compatibleSeeds <- function(x, y) {
+    body <-  c(".data", "filtered_rows", "group_by_vars", "drop_empty_groups", "arrange_vars", "arrange_desc")
+    x_query <- arrow_query(x)
+    y_query <- arrow_query(y)
+
+    identical(x@key, y@key) &&
+    identical(x@drop, y@drop) &&
+    inherits(x_query, "arrow_dplyr_query") &&
+    inherits(y_query, "arrow_dplyr_query") &&
+    identical(unclass(x_query)[body], unclass(y_query)[body])
+}
+
+#' @importFrom dplyr mutate select
+.Arith.ParquetArraySeed <- function(.Generic, query, key, drop, v1, v2) {
+    query <- switch(.Generic,
+                    "+" = mutate(query, .x. = `+`(!!v1, !!v2)),
+                    "-" = mutate(query, .x. = `-`(!!v1, !!v2)),
+                    "*" = mutate(query, .x. = `*`(!!v1, !!v2)),
+                    "/" = mutate(query, .x. = `/`(!!v1, !!v2)),
+                    "^" = mutate(query, .x. = `^`(!!v1, !!v2)),
+                    "%%" = mutate(query, .x. = `%%`(!!v1, !!v2)),
+                    "%/%" = mutate(query, .x. = `%/%`(!!v1, !!v2)))
+    query <- select(query, c(names(key), ".x."))
+    type <- .getColumnType(query)
+    new("ParquetArraySeed", query = query, key = key, value = ".x.", type = type, drop = drop)
+}
+
+#' @export
+setMethod("Arith", c(e1 = "ParquetArraySeed", e2 = "ParquetArraySeed"), function(e1, e2) {
+    if (!.compatibleSeeds(e1, e2)) {
+        stop("can only perform arithmetic operations with compatible objects")
+    }
+    query <- arrow_query(e1)
+    query$selected_columns <- c(query$selected_columns, arrow_query(e2)$selected_columns[e2@value])
+    names(query$selected_columns) <- make.unique(names(query$selected_columns), sep = "_")
+    v1 <- as.name(e1@value)
+    v2 <- as.name(names(query$selected_columns)[length(query$selected_columns)])
+    .Arith.ParquetArraySeed(.Generic, query = query, key = e1@key, drop = e1@drop, v1 = v1, v2 = v2)
+})
+
+#' @export
+setMethod("Arith", c(e1 = "ParquetArraySeed", e2 = "numeric"), function(e1, e2) {
+    if (length(e2) != 1L) {
+        stop("can only perform arithmetic operations with a scalar value")
+    }
+    query <- arrow_query(e1)
+    v1 <- as.name(e1@value)
+    .Arith.ParquetArraySeed(.Generic, query = query, key = e1@key, drop = e1@drop, v1 = v1, v2 = e2)
+})
+
+#' @export
+setMethod("Arith", c(e1 = "numeric", e2 = "ParquetArraySeed"), function(e1, e2) {
+    if (length(e1) != 1L) {
+        stop("can only perform arithmetic operations with a scalar value")
+    }
+    query <- arrow_query(e2)
+    v2 <- as.name(e2@value)
+    .Arith.ParquetArraySeed(.Generic, query = query, key = e2@key, drop = e2@drop, v1 = e1, v2 = v2)
 })
 
 #' @export
