@@ -57,10 +57,71 @@ test_that("extraction methods work as expected for a ParquetMatrix", {
 
 test_that("aperm and t methods work as expected for a ParquetMatrix", {
     names(dimnames(state.x77)) <- c("rowname", "colname")
+    pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
+    checkParquetMatrix(aperm(pqmat, c(2, 1)), aperm(state.x77, c(2, 1)))
+    checkParquetMatrix(t(pqmat), t(state.x77))
+})
 
+test_that("Math methods work as expected for a ParquetMatrix", {
     pqmat <- ParquetMatrix(state_path, row = list("rowname" = row.names(state.x77)), col = list("colname" = colnames(state.x77)), value = "value")
 
-    checkParquetMatrix(aperm(pqmat, c(2, 1)), aperm(state.x77, c(2, 1)))
+    income <- pqmat[, "Income", drop = FALSE]
+    ikeep <-
+      c("Colorado", "Delaware", "Idaho", "Illinois", "Indiana", "Iowa", "Kansas",
+        "Maine", "Maryland", "Michigan", "Minnesota", "Missouri", "Montana",
+        "Nebraska", "Nevada", "New Hampshire", "North Dakota", "Ohio", "Oregon",
+        "Pennsylvania", "South Dakota", "Utah", "Vermont", "Washington", "Wisconsin",
+        "Wyoming")
+    illiteracy <- pqmat[ikeep, "Illiteracy", drop = FALSE]
 
-    checkParquetMatrix(t(pqmat), t(state.x77))
+    checkParquetMatrix(abs(income), abs(as.array(income)))
+    checkParquetMatrix(sign(income), sign(as.array(income)))
+    checkParquetMatrix(sqrt(income), sqrt(as.array(income)))
+    checkParquetMatrix(ceiling(income), ceiling(as.array(income)))
+    checkParquetMatrix(floor(income), floor(as.array(income)))
+    checkParquetMatrix(trunc(income), trunc(as.array(income)))
+
+    expect_error(cummax(income))
+    expect_error(cummin(income))
+    expect_error(cumprod(income))
+    expect_error(cumsum(income))
+
+    checkParquetMatrix(log(income), log(as.array(income)))
+    checkParquetMatrix(log10(income), log10(as.array(income)))
+    checkParquetMatrix(log2(income), log2(as.array(income)))
+    checkParquetMatrix(log1p(income), log1p(as.array(income)))
+
+    checkParquetMatrix(acos(illiteracy), acos(as.array(illiteracy)))
+
+    expect_error(acosh(illiteracy))
+
+    checkParquetMatrix(asin(illiteracy), asin(as.array(illiteracy)))
+
+    expect_error(asinh(illiteracy))
+    expect_error(atan(illiteracy))
+    expect_error(atanh(illiteracy))
+
+    checkParquetMatrix(exp(income), exp(as.array(income)))
+
+    expect_error(expm1(income))
+
+    checkParquetMatrix(cos(income), cos(as.array(income)))
+
+    expect_error(cosh(income))
+    expect_error(cospi(income))
+
+    checkParquetMatrix(sin(income), sin(as.array(income)))
+
+    expect_error(sinh(income))
+    expect_error(sinpi(income))
+
+    checkParquetMatrix(tan(income), tan(as.array(income)))
+
+    expect_error(tanh(income))
+    expect_error(tanpi(income))
+
+    expect_error(gamma(income))
+    expect_error(lgamma(income))
+    expect_error(digamma(income))
+    expect_error(trigamma(income))
 })

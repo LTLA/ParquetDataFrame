@@ -28,6 +28,7 @@
 #' [,ParquetArray,ANY,ANY,ANY-method
 #' aperm,ParquetArray-method
 #' t,ParquetArray-method
+#' Math,ParquetArray-method
 #'
 #' @seealso
 #' \code{\link{ParquetArraySeed}},
@@ -62,6 +63,11 @@ setMethod("aperm", "ParquetArray", function(a, perm, ...) {
 #' @importFrom BiocGenerics t
 setMethod("t", "ParquetArray", function(x) {
     initialize(x, seed = t(seed(x)))
+})
+
+#' @export
+setMethod("Math", "ParquetArray", function(x) {
+    initialize(x, seed = callGeneric(seed(x)))
 })
 
 #' @export

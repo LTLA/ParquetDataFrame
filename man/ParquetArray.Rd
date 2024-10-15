@@ -6,6 +6,7 @@
 \alias{[,ParquetArray,ANY,ANY,ANY-method}
 \alias{aperm,ParquetArray-method}
 \alias{t,ParquetArray-method}
+\alias{Math,ParquetArray-method}
 \title{Parquet datasets as DelayedArray objects}
 \usage{
 ParquetArray(data, key, value, type = NULL, ...)
