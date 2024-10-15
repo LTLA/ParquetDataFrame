@@ -10,7 +10,7 @@
 #' more information.
 #'
 #' @param data Either a string containing the path to the Parquet data,
-#' or an existing ParquetArraySeed object.
+#' or an \code{arrow_dplyr_query} object.
 #' @param key Either a character vector or a named list of character vectors
 #' containing the names of the columns in the Parquet data that specify
 #' the primary key of the array.
@@ -395,20 +395,20 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
 setMethod("DelayedArray", "ParquetArraySeed", function(seed) ParquetArray(seed))
 
 #' @export
-#' @importFrom dplyr distinct mutate pull select
+#' @importFrom dplyr distinct everything mutate pull select
 #' @importFrom IRanges CharacterList
 #' @importClassesFrom IRanges CharacterList
 #' @importFrom stats setNames
 #' @rdname ParquetArraySeed
 ParquetArraySeed <- function(data, key, value, type = NULL, ...) {
     if (inherits(data, "arrow_dplyr_query")) {
-        dat <- data
+        query <- data
     } else {
-        dat <- acquireDataset(data, ...)
+        query <- select(acquireDataset(data, ...), everything())
     }
 
     if (is.character(key)) {
-        key <- sapply(key, function(x) pull(distinct(select(dat, as.name(!!x))), as_vector = TRUE), simplify = FALSE)
+        key <- sapply(key, function(x) pull(distinct(select(query, as.name(!!x))), as_vector = TRUE), simplify = FALSE)
     }
 
     if (is.list(key)) {
@@ -420,7 +420,7 @@ ParquetArraySeed <- function(data, key, value, type = NULL, ...) {
     }
 
     cols <- c(lapply(names(key), as.name), list(as.name(value)))
-    query <- do.call(select, c(list(dat), cols))
+    query <- do.call(select, c(list(query), cols))
     if (is.null(type)) {
         type <- .getColumnType(query)
     } else {
