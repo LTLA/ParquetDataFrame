@@ -37,3 +37,17 @@ setOldClass("arrow_dplyr_query")
     inherits(y, "arrow_dplyr_query") &&
     identical(unclass(x)[body], unclass(y)[body])
 }
+
+#' @importFrom dplyr filter
+.executeQuery <- function(query, key) {
+    for (i in names(key)) {
+        query <- filter(query, !!as.name(i) %in% key[[i]])
+    }
+
+    df <- as.data.frame(query)
+    if (anyDuplicated(df[, names(key)])) {
+        stop("duplicate keys found in Parquet data")
+    }
+
+    df
+}

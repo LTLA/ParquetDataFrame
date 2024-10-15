@@ -337,7 +337,6 @@ setMethod("Math", "ParquetArraySeed", function(x) {
 
 #' @export
 #' @importFrom DelayedArray extract_array
-#' @importFrom dplyr filter
 setMethod("extract_array", "ParquetArraySeed", function(x, index) {
     # Process index argument
     if (!is.list(index)) {
@@ -378,23 +377,12 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
     if (min(dim(output)) == 0L) {
         return(output)
     }
-
-    # Add filters to query
-    query <- arrow_query(x)
-    for (i in names(index)) {
-        query <- filter(query, !!as.name(i) %in% index[[i]])
-    }
-
-    # Execute query
-    df <- as.data.frame(query)
-    key <- df[, names(x@key)]
-    if (anyDuplicated(key)) {
-        stop("duplicate keys found in Parquet data")
-    }
+    dimnames(output) <- index
 
     # Fill output array
-    dimnames(output) <- index
-    output[as.matrix(key)] <- df[[x@value]]
+    df <- .executeQuery(arrow_query(x), index)
+    keycols <- df[, names(x@key)]
+    output[as.matrix(keycols)] <- df[[x@value]]
     if (x@drop) {
         output <- as.array(drop(output))
     }
