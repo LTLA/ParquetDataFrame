@@ -51,8 +51,8 @@
 #' Arith,ParquetArraySeed,numeric-method
 #' Arith,numeric,ParquetArraySeed-method
 #' Compare,ParquetArraySeed,ParquetArraySeed-method
-#' Compare,ParquetArraySeed,numeric-method
-#' Compare,numeric,ParquetArraySeed-method
+#' Compare,ParquetArraySeed,vector-method
+#' Compare,vector,ParquetArraySeed-method
 #' Logic,ParquetArraySeed,ParquetArraySeed-method
 #' Math,ParquetArraySeed-method
 #'
@@ -67,6 +67,7 @@
 NULL
 
 #' @export
+#' @import methods
 #' @importClassesFrom BiocGenerics OutOfMemoryObject
 #' @importClassesFrom IRanges CharacterList
 #' @importClassesFrom S4Arrays Array
@@ -76,8 +77,8 @@ setClass("ParquetArraySeed", contains = c("Array", "OutOfMemoryObject"),
 
 #' @importFrom S4Vectors isSingleString isTRUEorFALSE setValidity2
 setValidity2("ParquetArraySeed", function(x) {
-    if (is.null(names(x@key))) {
-        return("'key' slot must be a named list of character vectors")
+    if (is.null(names(x@key)) || !all(names(x@key) %in% names(x@query))) {
+        return("'key' slot must be a list of character vectors with names that match the query")
     }
     if (!isSingleString(x@value)) {
         return("'value' slot must be a string")
@@ -180,8 +181,8 @@ setMethod("[", "ParquetArraySeed", function(x, i, j, ..., drop = TRUE) {
 
 .compatibleSeeds <- function(x, y) {
     body <-  c(".data", "filtered_rows", "group_by_vars", "drop_empty_groups", "arrange_vars", "arrange_desc")
-    x_query <- arrow_query(x)
-    y_query <- arrow_query(y)
+    x_query <- x@query
+    y_query <- y@query
 
     identical(x@key, y@key) &&
     identical(x@drop, y@drop) &&
@@ -210,8 +211,8 @@ setMethod("Arith", c(e1 = "ParquetArraySeed", e2 = "ParquetArraySeed"), function
     if (!.compatibleSeeds(e1, e2)) {
         stop("can only perform arithmetic operations with compatible objects")
     }
-    query <- arrow_query(e1)
-    query$selected_columns <- c(query$selected_columns, arrow_query(e2)$selected_columns[e2@value])
+    query <- e1@query
+    query$selected_columns <- c(query$selected_columns, e2@query$selected_columns[e2@value])
     names(query$selected_columns) <- make.unique(names(query$selected_columns), sep = "_")
     v1 <- as.name(e1@value)
     v2 <- as.name(names(query$selected_columns)[length(query$selected_columns)])
@@ -223,7 +224,7 @@ setMethod("Arith", c(e1 = "ParquetArraySeed", e2 = "numeric"), function(e1, e2) 
     if (length(e2) != 1L) {
         stop("can only perform arithmetic operations with a scalar value")
     }
-    query <- arrow_query(e1)
+    query <- e1@query
     v1 <- as.name(e1@value)
     .Arith.ParquetArraySeed(.Generic, query = query, key = e1@key, drop = e1@drop, v1 = v1, v2 = e2)
 })
@@ -233,7 +234,7 @@ setMethod("Arith", c(e1 = "numeric", e2 = "ParquetArraySeed"), function(e1, e2) 
     if (length(e1) != 1L) {
         stop("can only perform arithmetic operations with a scalar value")
     }
-    query <- arrow_query(e2)
+    query <- e2@query
     v2 <- as.name(e2@value)
     .Arith.ParquetArraySeed(.Generic, query = query, key = e2@key, drop = e2@drop, v1 = e1, v2 = v2)
 })
@@ -256,8 +257,8 @@ setMethod("Compare", c(e1 = "ParquetArraySeed", e2 = "ParquetArraySeed"), functi
     if (!.compatibleSeeds(e1, e2)) {
         stop("can only perform comparison operations with compatible objects")
     }
-    query <- arrow_query(e1)
-    query$selected_columns <- c(query$selected_columns, arrow_query(e2)$selected_columns[e2@value])
+    query <- e1@query
+    query$selected_columns <- c(query$selected_columns, e2@query$selected_columns[e2@value])
     names(query$selected_columns) <- make.unique(names(query$selected_columns), sep = "_")
     v1 <- as.name(e1@value)
     v2 <- as.name(names(query$selected_columns)[length(query$selected_columns)])
@@ -265,21 +266,21 @@ setMethod("Compare", c(e1 = "ParquetArraySeed", e2 = "ParquetArraySeed"), functi
 })
 
 #' @export
-setMethod("Compare", c(e1 = "ParquetArraySeed", e2 = "numeric"), function(e1, e2) {
+setMethod("Compare", c(e1 = "ParquetArraySeed", e2 = "vector"), function(e1, e2) {
     if (length(e2) != 1L) {
         stop("can only perform comparison operations with a scalar value")
     }
-    query <- arrow_query(e1)
+    query <- e1@query
     v1 <- as.name(e1@value)
     .Compare.ParquetArraySeed(.Generic, query = query, key = e1@key, drop = e1@drop, v1 = v1, v2 = e2)
 })
 
 #' @export
-setMethod("Compare", c(e1 = "numeric", e2 = "ParquetArraySeed"), function(e1, e2) {
+setMethod("Compare", c(e1 = "vector", e2 = "ParquetArraySeed"), function(e1, e2) {
     if (length(e1) != 1L) {
         stop("can only perform comparison operations with a scalar value")
     }
-    query <- arrow_query(e2)
+    query <- e2@query
     v2 <- as.name(e2@value)
     .Compare.ParquetArraySeed(.Generic, query = query, key = e2@key, drop = e2@drop, v1 = e1, v2 = v2)
 })
@@ -298,8 +299,8 @@ setMethod("Logic", c(e1 = "ParquetArraySeed", e2 = "ParquetArraySeed"), function
     if (!.compatibleSeeds(e1, e2)) {
         stop("can only perform logical operations with compatible objects")
     }
-    query <- arrow_query(e1)
-    query$selected_columns <- c(query$selected_columns, arrow_query(e2)$selected_columns[e2@value])
+    query <- e1@query
+    query$selected_columns <- c(query$selected_columns, e2@query$selected_columns[e2@value])
     names(query$selected_columns) <- make.unique(names(query$selected_columns), sep = "_")
     v1 <- as.name(e1@value)
     v2 <- as.name(names(query$selected_columns)[length(query$selected_columns)])
@@ -309,7 +310,7 @@ setMethod("Logic", c(e1 = "ParquetArraySeed", e2 = "ParquetArraySeed"), function
 #' @export
 #' @importFrom dplyr mutate select
 setMethod("Math", "ParquetArraySeed", function(x) {
-    query <- arrow_query(x)
+    query <- x@query
     name <- as.name(x@value)
     query <-
       switch(.Generic,
@@ -380,7 +381,7 @@ setMethod("extract_array", "ParquetArraySeed", function(x, index) {
     dimnames(output) <- index
 
     # Fill output array
-    df <- .executeQuery(arrow_query(x), index)
+    df <- .executeQuery(x@query, key = index)
     keycols <- df[, names(x@key)]
     output[as.matrix(keycols)] <- df[[x@value]]
     if (x@drop) {

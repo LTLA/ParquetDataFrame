@@ -4,21 +4,20 @@
 \alias{arrow_query}
 \alias{arrow_query,ParquetArray-method}
 \alias{arrow_query,ParquetArraySeed-method}
-\alias{arrow_query,ParquetColumnSeed-method}
-\alias{arrow_query,ParquetColumnVector-method}
+\alias{arrow_query,ParquetColumn-method}
 \alias{arrow_query,ParquetDataFrame-method}
 \alias{arrow_query,ParquetMatrix-method}
-\title{Query Accessor}
+\title{Arrow Query Accessor}
 \usage{
 arrow_query(x, ...)
 }
 \arguments{
-\item{x}{An object to get or set the query value.}
+\item{x}{An object to get or set the arrow query value.}
 
 \item{...}{Additional arguments, for use in specific methods.}
 }
 \description{
-Get or set the query value contained in an object.
+Get or set the arrow query value contained in an object.
 }
 \examples{
 arrow_query

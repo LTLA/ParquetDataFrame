@@ -1,8 +1,8 @@
-#' Query Accessor
+#' Arrow Query Accessor
 #'
-#' Get or set the query value contained in an object.
+#' Get or set the arrow query value contained in an object.
 #'
-#' @param x An object to get or set the query value.
+#' @param x An object to get or set the arrow query value.
 #' @param ... Additional arguments, for use in specific methods.
 #'
 #' @author Patrick Aboyoun
@@ -16,8 +16,7 @@
 #'
 #' arrow_query,ParquetArray-method
 #' arrow_query,ParquetArraySeed-method
-#' arrow_query,ParquetColumnSeed-method
-#' arrow_query,ParquetColumnVector-method
+#' arrow_query,ParquetColumn-method
 #' arrow_query,ParquetDataFrame-method
 #' arrow_query,ParquetMatrix-method
 #'
@@ -43,6 +42,10 @@ setOldClass("arrow_dplyr_query")
     for (i in names(key)) {
         query <- filter(query, !!as.name(i) %in% key[[i]])
     }
+
+    # Allow for 1 extra row to check for duplicate keys
+    length <- prod(lengths(key, use.names = FALSE)) + 1L
+    query <- head(query, n = length)
 
     df <- as.data.frame(query)
     if (anyDuplicated(df[, names(key)])) {

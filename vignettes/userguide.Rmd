@@ -34,11 +34,11 @@ Given a path to a Parquet file, we can just supply the path to the `ParquetDataF
 ```{r}
 # Mocking up a file.
 tf <- tempfile()
-arrow::write_parquet(mtcars, tf)
+arrow::write_parquet(cbind(model = rownames(mtcars), mtcars), tf)
 
 # Creating the ParquetDataFrame.
 library(ParquetDataFrame)
-df <- ParquetDataFrame(tf)
+df <- ParquetDataFrame(tf, key = "model")
 df
 ```
 
@@ -50,7 +50,7 @@ colnames(df)
 class(as.data.frame(df))
 ```
 
-We extract individual columns as `ParquetColumnVector` objects.
+We extract individual columns as `ParquetColumn` objects.
 These are 1-dimensional file-backed `DelayedArray`s that pull a single column's data from the Parquet file on demand.
 
 ```{r}
@@ -69,7 +69,7 @@ as.vector(df$mpg)
 The main goal of a `ParquetDataFrame` is to serve as a consistent representation of the data inside a Parquet file.
 However, this cannot be easily reconciled with many `DataFrame` operations that add or change data - 
 at least, not without mutating the Parquet data, which is outside the scope of the `ParquetDataFrame` class.
-To handle such operations, the `ParquetDataFrame` will collapse to a `DFrame` of `ParquetColumnVector`s:
+To handle such operations, the `ParquetDataFrame` will collapse to a `DFrame` of `ParquetColumn`s:
 
 ```{r}
 copy <- df

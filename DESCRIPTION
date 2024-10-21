@@ -15,9 +15,10 @@ Authors@R:
 License: MIT + file LICENSE
 Depends:
     DelayedArray (>= 0.31.8)
-Imports: 
-    stats,
+Imports:
     methods,
+    stats,
+    utils,
     BiocGenerics (>= 0.51.2),
     S4Vectors,
     IRanges,
@@ -40,6 +41,6 @@ Collate:
     'arrow_query.R'
     'ParquetArraySeed.R'
     'ParquetArray.R'
-    'ParquetColumnSeed.R'
+    'ParquetColumn.R'
     'ParquetDataFrame.R'
     'ParquetMatrix.R'

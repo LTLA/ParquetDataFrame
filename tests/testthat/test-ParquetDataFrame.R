@@ -1,118 +1,101 @@
 # Tests the basic functions of a ParquetDataFrame.
 # library(testthat); library(ParquetDataFrame); source("setup.R"); source("test-ParquetDataFrame.R")
 
-x <- ParquetDataFrame(infert_path)
-
 test_that("basic methods work for a ParquetDataFrame", {
-    expect_identical(ncol(x), ncol(infert_df))
-    expect_identical(nrow(x), nrow(infert_df))
-    expect_null(rownames(x))
-    expect_identical(colnames(x), colnames(infert_df))
+    df <- ParquetDataFrame(mtcars_path, key = "model")
+    checkParquetDataFrame(df, mtcars)
 
-    unnamed <- infert_df
-    rownames(unnamed) <- NULL
-    expect_identical(as.data.frame(x), unnamed)
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    checkParquetDataFrame(df, mtcars)
+    expect_identical(rownames(df), rownames(mtcars))
+    expect_identical(as.data.frame(df), mtcars)
 })
 
 test_that("renaming columns creates a new ParquetDataFrame", {
-    copy <- x
-    replacements <- sprintf("COL%i", seq_len(ncol(x)))
-    colnames(copy) <- replacements
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), replacements)
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    expected <- mtcars
 
-    copy <- x
-    colnames(copy) <- colnames(x)
-    expect_s4_class(copy, "ParquetDataFrame")
+    replacements <- sprintf("COL%i", seq_len(ncol(df)))
+    colnames(df) <- replacements
+    colnames(expected) <- replacements
+    checkParquetDataFrame(df, expected)
 })
 
-test_that("adding rownames collapses to an ordinary DFrame", {
-    copy <- x
-    replacements <- sprintf("ROW%i", seq_len(nrow(x)))
-    rownames(copy) <- replacements
-    expect_s4_class(copy, "DFrame")
-    expect_identical(rownames(copy), replacements)
+test_that("adding rownames creates a new ParquetDataFrame", {
+    df <- ParquetDataFrame(mtcars_path, key = "model")
+    expected <- mtcars
 
-    copy <- x
-    rownames(copy) <- NULL
-    expect_s4_class(copy, "ParquetDataFrame")
+    replacements <- sprintf("ROW%i", seq_len(nrow(df)))
+    rownames(df) <- replacements
+    rownames(expected) <- setNames(names(df@key[[1L]]), df@key[[1L]])[rownames(expected)]
+    checkParquetDataFrame(df, expected)
+
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    expected <- mtcars
+
+    replacements <- sprintf("ROW%i", seq_len(nrow(df)))
+    rownames(df) <- replacements
+    rownames(expected) <- replacements
+    checkParquetDataFrame(df, expected)
 })
 
 test_that("slicing by columns preserves type of a ParquetDataFrame", {
-    copy <- x[,1:2]
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(infert_df)[1:2])
-    expect_identical(ncol(copy), 2L)
-    unnamed <- infert_df[,1:2]
-    rownames(unnamed) <- NULL
-    expect_identical(as.data.frame(copy), unnamed)
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
 
-    cn <- colnames(x)[c(4,2,3)]
-    copy <- x[,cn]
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), cn)
-    expect_identical(ncol(copy), 3L)
+    keep <- 1:2
+    checkParquetDataFrame(df[,keep], mtcars[,keep])
 
-    keep <- startsWith(colnames(x), "d")
-    copy <- x[,keep]
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(infert_df)[keep])
-    expect_identical(ncol(copy), sum(keep))
+    keep <- colnames(df)[c(4,2,3)]
+    checkParquetDataFrame(df[,keep], mtcars[,keep])
 
-    copy <- x[,5,drop=FALSE]
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(infert_df)[5])
+    keep <- startsWith(colnames(df), "d")
+    checkParquetDataFrame(df[,keep], mtcars[,keep])
+
+    keep <- 5
+    checkParquetDataFrame(df[,keep, drop=FALSE], mtcars[,keep, drop=FALSE])
 
     # Respects mcols.
-    x2 <- x
-    mcols(x2) <- DataFrame(whee=seq_len(ncol(x)))
-    copy <- x2[,3:1]
+    copy <- df
+    mcols(copy) <- DataFrame(whee=seq_len(ncol(df)))
+    copy <- copy[,3:1]
     expect_identical(mcols(copy)$whee, 3:1)
 })
 
-test_that("extraction of a column yields a ParquetColumnVector", {
-    col <- x[,5]
-    expect_s4_class(col, "ParquetColumnVector")
-    expect_identical(as.vector(col), infert_df[,5])
+test_that("extraction of a column yields a ParquetColumn", {
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
 
-    nm <- colnames(infert_df)[5]
-    col <- x[[nm]]
-    expect_s4_class(col, "ParquetColumnVector")
-    expect_identical(as.vector(col), infert_df[[nm]])
+    keep <- 5
+    checkParquetColumn(df[,keep], setNames(mtcars[,keep], rownames(mtcars)))
+
+    keep <- colnames(df)[5]
+    checkParquetColumn(df[,keep], setNames(mtcars[,keep], rownames(mtcars)))
 })
 
 test_that("conditional slicing by rows preserves type of a ParquetDataFrame", {
-    i <- x$age > 30
-    copy <- x[i,]
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(infert_df))
-    expect_identical(as.vector(copy[[1]]), infert_df[[1]][as.vector(i)])
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    checkParquetDataFrame(df[df$cyl > 6,], mtcars[mtcars$cyl > 6,])
 })
 
-test_that("positional slicing by rows collapses to an ordinary DFrame", {
-    i <- sample(nrow(x))
-    copy <- x[i,]
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), colnames(infert_df))
-    expect_identical(as.vector(copy[[1]]), infert_df[[1]][i])
+test_that("positional slicing by rows preserves type of a ParquetDataFrame", {
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    i <- sample(nrow(df))
+    checkParquetDataFrame(df[i,], mtcars[i,])
 })
 
 test_that("head preserves type of a ParquetDataFrame", {
-    copy <- head(x, 20)
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), colnames(infert_df))
-    expect_identical(as.data.frame(copy), head(infert_df, 20))
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    checkParquetDataFrame(head(df, 20), head(mtcars, 20))
 })
 
-test_that("tail collapses to an ordinary DFrame", {
-    copy <- tail(x, 20)
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), colnames(infert_df))
-    expect_identical(as.vector(copy[[1]]), tail(infert_df[[1]], 20))
+test_that("tail preserves type of a ParquetDataFrame", {
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    checkParquetDataFrame(tail(df, 20), tail(mtcars, 20))
 })
 
 test_that("subset assignments that collapse to an ordinary DFrame", {
-    copy <- x
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+
+    copy <- df
     copy[1:5,] <- copy[9:13,]
     expect_s4_class(copy, "DFrame")
     expect_s4_class(copy[[1]], "DelayedArray")
@@ -133,107 +116,106 @@ test_that("subset assignments that collapse to an ordinary DFrame", {
 })
 
 test_that("subset assignments that return a ParquetDataFrame", {
-    copy <- x
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+
+    copy <- df
     copy[,1] <- copy[,1]
-    expect_s4_class(copy, "ParquetDataFrame")
+    checkParquetDataFrame(copy, mtcars)
 
-    copy <- x
-    copy[,colnames(x)[2]] <- copy[,colnames(x)[2],drop=FALSE]
-    expect_s4_class(copy, "ParquetDataFrame")
+    copy <- df
+    copy[,colnames(df)[2]] <- copy[,colnames(df)[2],drop=FALSE]
+    checkParquetDataFrame(copy, mtcars)
 
-    copy <- x
+    copy <- df
     copy[[3]] <- copy[[3]]
-    expect_s4_class(copy, "ParquetDataFrame")
+    checkParquetDataFrame(copy, mtcars)
 
-    copy <- x
+    copy <- df
     copy[[1]] <- copy[[3]]
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_s4_class(copy[[1]], "ParquetColumnVector")
-    ref <- infert_df
-    ref[[1]] <- ref[[3]]
-    rownames(ref) <- NULL
-    expect_identical(as.data.frame(copy), ref)
+    mtcars2 <- mtcars
+    mtcars2[[1]] <- mtcars2[[3]]
+    checkParquetDataFrame(copy, mtcars2)
 
-    copy <- x
+    copy <- df
     copy[,c(1,2,3)] <- copy[,c(4,5,6)]
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_s4_class(copy[[1]], "ParquetColumnVector")
-    ref <- infert_df
-    ref[,c(1,2,3)] <- ref[,c(4,5,6)]
-    rownames(ref) <- NULL
-    expect_identical(as.data.frame(copy), ref)
+    mtcars2 <- mtcars
+    mtcars2[,c(1,2,3)] <- mtcars2[,c(4,5,6)]
+    checkParquetDataFrame(copy, mtcars2)
 })
 
 test_that("rbinding collapses to an ordinary DFrame", {
-    copy <- rbind(x, x)
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+
+    copy <- rbind(df, df)
     expect_s4_class(copy, "DFrame")
     expect_s4_class(copy[[1]], "DelayedArray")
 
-    ref <- rbind(infert_df, infert_df)
-    rownames(ref) <- NULL
+    ref <- rbind(mtcars, mtcars)
     expect_identical(as.data.frame(copy), ref)
 })
 
 test_that("cbinding may or may not collapse to an ordinary DFrame", {
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+
     # Same path, we get another PDF.
-    copy <- cbind(x, foo=x[["age"]])
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), c(colnames(infert_df), "foo"))
+    checkParquetDataFrame(cbind(df, foo=df[["carb"]]), cbind(mtcars, foo=mtcars[["carb"]]))
 
     # Duplicate names causes unique renaming.
-    copy <- cbind(x, x)
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), make.unique(rep(colnames(x), 2), sep="_"))
+    expected <- cbind(mtcars, mtcars)
+    colnames(expected) <- make.unique(colnames(expected), sep="_")
+    checkParquetDataFrame(cbind(df, df), expected)
 
     # Duplicate names causes unique renaming.
-    copy <- cbind(x, age=x[["age"]])
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), c(colnames(infert_df), "age_1"))
+    expected <- cbind(mtcars, carb=mtcars[["carb"]])
+    colnames(expected) <- make.unique(colnames(expected), sep="_")
+    checkParquetDataFrame(cbind(df, carb=df[["carb"]]), expected)
 
     # Duplicate names causes unique renaming.
-    copy <- cbind(age=x[["age"]], x)
-    expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(colnames(copy), make.unique(c("age", colnames(infert_df)), sep="_"))
+    expected <- cbind(carb=mtcars[["carb"]], mtcars)
+    colnames(expected) <- make.unique(colnames(expected), sep="_")
+    checkParquetDataFrame(cbind(carb=df[["carb"]], df), expected)
 
     # Different DataFrame class causes collapse.
-    copy <- cbind(x, infert_df)
+    copy <- cbind(df, mtcars)
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), rep(colnames(infert_df), 2))
+    expect_identical(colnames(copy), rep(colnames(mtcars), 2))
 
     # Different paths causes collapse.
     tmp <- tempfile()
-    file.symlink(infert_path, tmp)
-    x2 <- ParquetDataFrame(tmp)
-    copy <- cbind(x, x2)
+    file.symlink(mtcars_path, tmp)
+    df2 <- ParquetDataFrame(tmp, key = list(model = rownames(mtcars)))
+    copy <- cbind(df, df2)
     expect_s4_class(copy, "DFrame")
 
     # Different paths causes collapse.
-    copy <- cbind(x, age=x2[["age"]])
+    copy <- cbind(df, carb=df2[["carb"]])
     expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(infert_df), "age"))
+    expect_identical(colnames(copy), c(colnames(mtcars), "carb"))
 })
 
 test_that("cbinding carries forward any metadata", {
-    x1 <- x
-    colnames(x1) <- paste0(colnames(x1), "_1")
-    mcols(x1) <- DataFrame(whee="A")
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
 
-    x2 <- x
-    colnames(x2) <- paste0(colnames(x2), "_2")
-    mcols(x2) <- DataFrame(whee="B")
+    df1 <- df
+    colnames(df1) <- paste0(colnames(df1), "_1")
+    mcols(df1) <- DataFrame(whee="A")
 
-    copy <- cbind(x1, x2)
+    df2 <- df
+    colnames(df2) <- paste0(colnames(df2), "_2")
+    mcols(df2) <- DataFrame(whee="B")
+
+    copy <- cbind(df1, df2)
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(mcols(copy)$whee, rep(c("A", "B"), each=ncol(x)))
+    expect_identical(mcols(copy)$whee, rep(c("A", "B"), each=ncol(df)))
 
-    mcols(x1) <- NULL
-    copy <- cbind(x1, x2)
+    mcols(df1) <- NULL
+    copy <- cbind(df1, df2)
     expect_s4_class(copy, "ParquetDataFrame")
-    expect_identical(mcols(copy)$whee, rep(c(NA, "B"), each=ncol(x)))
+    expect_identical(mcols(copy)$whee, rep(c(NA, "B"), each=ncol(df)))
 
-    metadata(x1) <- list(a="YAY")
-    metadata(x2) <- list(a="whee")
-    copy <- cbind(x1, x2)
+    metadata(df1) <- list(a="YAY")
+    metadata(df2) <- list(a="whee")
+    copy <- cbind(df1, df2)
     expect_s4_class(copy, "ParquetDataFrame")
     expect_identical(metadata(copy), list(a="YAY", a="whee"))
 })

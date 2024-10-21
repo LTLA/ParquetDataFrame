@@ -3,7 +3,7 @@
 \name{ParquetDataFrame}
 \alias{ParquetDataFrame}
 \alias{ParquetDataFrame-class}
-\alias{show,ParquetDataFrame-method}
+\alias{makeNakedCharacterMatrixForDisplay,ParquetDataFrame-method}
 \alias{nrow,ParquetDataFrame-method}
 \alias{ncol,ParquetDataFrame-method}
 \alias{length,ParquetDataFrame-method}
@@ -25,42 +25,44 @@
 \alias{as.data.frame,ParquetDataFrame-method}
 \alias{coerce,ParquetDataFrame,DFrame-method}
 \title{Parquet-backed DataFrame}
-\usage{
-ParquetDataFrame(path, ...)
-}
 \arguments{
-\item{path}{String specifying a path to a Parquet data directory or file.}
+\item{data}{Either a string containing the path to the Parquet data,
+or an \code{arrow_dplyr_query} object.}
+
+\item{key}{Either a character vector or a named list of character vectors
+containing the names of the columns in the Parquet data that specify
+the primary key of the array.}
 
 \item{...}{Further arguments to be passed to \code{\link[arrow]{open_dataset}}.}
 }
 \value{
-A ParquetDataFrame where each column is a \linkS4class{ParquetColumnVector}.
+A ParquetDataFrame where each column is a \linkS4class{ParquetColumn}.
 }
 \description{
 Create a Parquet-backed \linkS4class{DataFrame}, where the data are kept on disk until requested.
 }
 \details{
-The ParquetDataFrame is essentially just a \linkS4class{DataFrame} of \linkS4class{ParquetColumnVector} objects.
+The ParquetDataFrame is essentially just a \linkS4class{DataFrame} of \linkS4class{ParquetColumn} objects.
 It is primarily useful for indicating that the in-memory representation is consistent with the underlying Parquet data
 (e.g., no delayed filter/mutate operations have been applied, no data has been added from other files).
 Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet data.
 
 In that vein, operations on a ParquetDataFrame may return another ParquetDataFrame if the operation does not introduce inconsistencies with the file-backed data.
 For example, slicing or combining by column will return a ParquetDataFrame as the contents of the retained columns are unchanged.
-In other cases, the ParquetDataFrame will collapse to a regular \linkS4class{DFrame} of \linkS4class{ParquetColumnVector} objects before applying the operation;
+In other cases, the ParquetDataFrame will collapse to a regular \linkS4class{DFrame} of \linkS4class{ParquetColumn} objects before applying the operation;
 these are still file-backed but lack the guarantee of file consistency.
 }
 \examples{
 # Mocking up a file:
 tf <- tempfile()
 on.exit(unlink(tf))
-arrow::write_parquet(mtcars, tf)
+arrow::write_parquet(cbind(model = rownames(mtcars), mtcars), tf)
 
 # Creating our Parquet-backed data frame:
-df <- ParquetDataFrame(tf)
+df <- ParquetDataFrame(tf, key = "model")
 df
 
-# Extraction yields a ParquetColumnVector:
+# Extraction yields a ParquetColumn:
 df$carb
 
 # Some operations preserve the ParquetDataFrame:
