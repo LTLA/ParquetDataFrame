@@ -20,10 +20,10 @@
 \alias{replaceCOLS,ParquetDataFrame-method}
 \alias{normalizeSingleBracketReplacementValue,ParquetDataFrame-method}
 \alias{[[<-,ParquetDataFrame-method}
+\alias{bindROWS,ParquetDataFrame-method}
 \alias{cbind,ParquetDataFrame-method}
 \alias{cbind.ParquetDataFrame}
 \alias{as.data.frame,ParquetDataFrame-method}
-\alias{coerce,ParquetDataFrame,DFrame-method}
 \title{Parquet-backed DataFrame}
 \arguments{
 \item{data}{Either a string containing the path to the Parquet data,
@@ -46,11 +46,6 @@ The ParquetDataFrame is essentially just a \linkS4class{DataFrame} of \linkS4cla
 It is primarily useful for indicating that the in-memory representation is consistent with the underlying Parquet data
 (e.g., no delayed filter/mutate operations have been applied, no data has been added from other files).
 Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet data.
-
-In that vein, operations on a ParquetDataFrame may return another ParquetDataFrame if the operation does not introduce inconsistencies with the file-backed data.
-For example, slicing or combining by column will return a ParquetDataFrame as the contents of the retained columns are unchanged.
-In other cases, the ParquetDataFrame will collapse to a regular \linkS4class{DFrame} of \linkS4class{ParquetColumn} objects before applying the operation;
-these are still file-backed but lack the guarantee of file consistency.
 }
 \examples{
 # Mocking up a file:
@@ -65,13 +60,13 @@ df
 # Extraction yields a ParquetColumn:
 df$carb
 
-# Some operations preserve the ParquetDataFrame:
+# Slicing ParquetDataFrame objects:
 df[,1:5]
+df[1:5,]
+
+# Combining by ParquetDataFrame and ParquetColumn objects:
 combined <- cbind(df, df)
 class(combined)
-
-# ... but most operations collapse to a regular DFrame:
-df[1:5,]
 combined2 <- cbind(df, some_new_name=df[,1])
 class(combined2)
 

@@ -92,27 +92,11 @@ test_that("tail preserves type of a ParquetDataFrame", {
     checkParquetDataFrame(tail(df, 20), tail(mtcars, 20))
 })
 
-test_that("subset assignments that collapse to an ordinary DFrame", {
+test_that("subset assignments that produce errors", {
     df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
-
-    copy <- df
-    copy[1:5,] <- copy[9:13,]
-    expect_s4_class(copy, "DFrame")
-    expect_s4_class(copy[[1]], "DelayedArray")
-    ref <- infert_df
-    ref[1:5,] <- ref[9:13,]
-    rownames(ref) <- NULL
-    expect_identical(as.data.frame(copy), ref)
-
-    copy <- x
-    copy[,"foobar"] <- runif(nrow(x))
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(x), "foobar"))
-
-    copy <- x
-    copy$some_random_thing <- runif(nrow(x))
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(x), "some_random_thing"))
+    expect_error(df[1:5,] <- df[9:13,])
+    expect_error(df[,"foobar"] <- runif(nrow(df)))
+    expect_error(df$some_random_thing <- runif(nrow(df)))
 })
 
 test_that("subset assignments that return a ParquetDataFrame", {
@@ -143,18 +127,12 @@ test_that("subset assignments that return a ParquetDataFrame", {
     checkParquetDataFrame(copy, mtcars2)
 })
 
-test_that("rbinding collapses to an ordinary DFrame", {
+test_that("rbinding produces errors", {
     df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
-
-    copy <- rbind(df, df)
-    expect_s4_class(copy, "DFrame")
-    expect_s4_class(copy[[1]], "DelayedArray")
-
-    ref <- rbind(mtcars, mtcars)
-    expect_identical(as.data.frame(copy), ref)
+    expect_error(rbind(df, df))
 })
 
-test_that("cbinding may or may not collapse to an ordinary DFrame", {
+test_that("cbinding operations that return a ParquetDataFrame", {
     df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
 
     # Same path, we get another PDF.
@@ -174,23 +152,19 @@ test_that("cbinding may or may not collapse to an ordinary DFrame", {
     expected <- cbind(carb=mtcars[["carb"]], mtcars)
     colnames(expected) <- make.unique(colnames(expected), sep="_")
     checkParquetDataFrame(cbind(carb=df[["carb"]], df), expected)
+})
 
-    # Different DataFrame class causes collapse.
-    copy <- cbind(df, mtcars)
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), rep(colnames(mtcars), 2))
+test_that("cbinding operations that produce errors", {
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
 
-    # Different paths causes collapse.
+    expect_error(cbind(df, mtcars))
+
+    # Different paths causes an error.
     tmp <- tempfile()
     file.symlink(mtcars_path, tmp)
     df2 <- ParquetDataFrame(tmp, key = list(model = rownames(mtcars)))
-    copy <- cbind(df, df2)
-    expect_s4_class(copy, "DFrame")
-
-    # Different paths causes collapse.
-    copy <- cbind(df, carb=df2[["carb"]])
-    expect_s4_class(copy, "DFrame")
-    expect_identical(colnames(copy), c(colnames(mtcars), "carb"))
+    expect_error(cbind(df, df2))
+    expect_error(cbind(df, carb=df2[["carb"]]))
 })
 
 test_that("cbinding carries forward any metadata", {
@@ -220,10 +194,7 @@ test_that("cbinding carries forward any metadata", {
     expect_identical(metadata(copy), list(a="YAY", a="whee"))
 })
 
-test_that("as.data.frame works with duplicated columns", {
-    duplicates <- c(1,1,2,2,3,4,3,5)
-    copy <- x[,duplicates]
-    unnamed <- infert_df[,duplicates]
-    rownames(unnamed) <- NULL
-    expect_identical(as.data.frame(copy), unnamed)
+test_that("extracting duplicate columns produces errors", {
+    df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
+    expect_error(df[,c(1,1,2,2,3,4,3,5)])
 })

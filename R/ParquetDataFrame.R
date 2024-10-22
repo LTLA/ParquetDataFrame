@@ -17,11 +17,6 @@
 #' (e.g., no delayed filter/mutate operations have been applied, no data has been added from other files).
 #' Thus, users can specialize code paths for a ParquetDataFrame to operate directly on the underlying Parquet data.
 #'
-#' In that vein, operations on a ParquetDataFrame may return another ParquetDataFrame if the operation does not introduce inconsistencies with the file-backed data.
-#' For example, slicing or combining by column will return a ParquetDataFrame as the contents of the retained columns are unchanged.
-#' In other cases, the ParquetDataFrame will collapse to a regular \linkS4class{DFrame} of \linkS4class{ParquetColumn} objects before applying the operation;
-#' these are still file-backed but lack the guarantee of file consistency.
-#'
 #' @author Aaron Lun, Patrick Aboyoun
 #' @examples
 #' # Mocking up a file:
@@ -36,13 +31,13 @@
 #' # Extraction yields a ParquetColumn:
 #' df$carb
 #'
-#' # Some operations preserve the ParquetDataFrame:
+#' # Slicing ParquetDataFrame objects:
 #' df[,1:5]
+#' df[1:5,]
+#'
+#' # Combining by ParquetDataFrame and ParquetColumn objects:
 #' combined <- cbind(df, df)
 #' class(combined)
-#'
-#' # ... but most operations collapse to a regular DFrame:
-#' df[1:5,]
 #' combined2 <- cbind(df, some_new_name=df[,1])
 #' class(combined2)
 #'
@@ -70,11 +65,11 @@
 #' normalizeSingleBracketReplacementValue,ParquetDataFrame-method
 #' [[<-,ParquetDataFrame-method
 #'
+#' bindROWS,ParquetDataFrame-method
 #' cbind,ParquetDataFrame-method
 #' cbind.ParquetDataFrame
 #'
 #' as.data.frame,ParquetDataFrame-method
-#' coerce,ParquetDataFrame,DFrame-method
 #'
 #' @include arrow_query.R
 #' @include acquireDataset.R
@@ -246,8 +241,7 @@ setMethod("extractCOLS", "ParquetDataFrame", function(x, i) {
     xstub <- setNames(seq_along(x), names(x))
     i <- normalizeSingleBracketSubscript(i, xstub)
     if (anyDuplicated(i)) {
-        x <- .collapse_to_dframe(x)
-        extractCOLS(x, i)
+        stop("cannot extract duplicate columns in a ParquetDataFrame")
     } else {
         query <- x@query[, c(names(x@key), names(x)[i])]
         mc <- extractROWS(mcols(x), i)
@@ -273,8 +267,7 @@ setMethod("[[", "ParquetDataFrame", function(x, i, j, ...) {
 #' @export
 #' @importFrom S4Vectors replaceROWS
 setMethod("replaceROWS", "ParquetDataFrame", function(x, i, value) {
-    x <- .collapse_to_dframe(x)
-    callGeneric(x, i, value)
+    stop("replacement of rows in a ParquetDataFrame is not supported")
 })
 
 #' @export
@@ -300,12 +293,7 @@ setMethod("replaceCOLS", "ParquetDataFrame", function(x, i, value) {
             }
         }
     }
-
-    # In theory, it is tempting to return a ParquetDataFrame; the problem is
-    # that assignment will change the mapping of column names to their
-    # contents, so it is no longer a pure representation of a ParquetDataFrame.
-    x <- .collapse_to_dframe(x)
-    replaceCOLS(x, i, value)
+    stop("not compatible ParquetDataFrame objects")
 })
 
 #' @export
@@ -321,15 +309,18 @@ setMethod("[[<-", "ParquetDataFrame", function(x, i, j, ..., value) {
             }
         }
     }
+    stop("not compatible ParquetDataFrame and ParquetColumn objects")
+})
 
-    x <- .collapse_to_dframe(x)
-    x[[i]] <- value
-    x
+#' @export
+#' @importFrom S4Vectors bindROWS
+setMethod("bindROWS", "ParquetDataFrame", function(x, objects = list(), use.names = TRUE, ignore.mcols = FALSE, check = TRUE) {
+    stop("binding rows to a ParquetDataFrame is not supported")
 })
 
 #' @export
 #' @importFrom dplyr rename
-#' @importFrom S4Vectors mcols make_zero_col_DFrame combineRows
+#' @importFrom S4Vectors combineRows make_zero_col_DFrame mcols metadata
 cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
     preserved <- TRUE
     objects <- list(...)
@@ -368,13 +359,7 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
     }
 
     if (!preserved) {
-        for (i in seq_along(objects)) {
-            obj <- objects[[i]]
-            if (is(obj, "ParquetDataFrame")) {
-                objects[[i]] <- .collapse_to_dframe(obj)
-            }
-        }
-        do.call(cbind, objects)
+        stop("cannot combine incompatible objects with the ParquetDataFrame")
     } else {
         all_selected_columns <- vector("list", length(objects))
         all_mcols <- vector("list", length(objects))
@@ -419,7 +404,6 @@ cbind.ParquetDataFrame <- function(..., deparse.level = 1) {
 }
 
 #' @export
-#' @importFrom S4Vectors bindCOLS
 setMethod("cbind", "ParquetDataFrame", cbind.ParquetDataFrame)
 
 #' @export
@@ -431,19 +415,3 @@ setMethod("as.data.frame", "ParquetDataFrame", function(x, row.names = NULL, opt
     rownames(df) <- names(x@key[[1L]])[match(rownames(df), x@key[[1L]])]
     df
 })
-
-#' @importFrom S4Vectors make_zero_col_DFrame mcols mcols<- metadata metadata<-
-.collapse_to_dframe <- function(x) {
-    df <- make_zero_col_DFrame(nrow(x))
-    for (j in names(x)) {
-        df[[j]] <- x[[j]]
-    }
-    rownames(df) <- rownames(x)
-    mcols(df) <- mcols(x, use.names = FALSE)
-    metadata(df) <- metadata(x)
-    df
-}
-
-#' @export
-#' @importClassesFrom S4Vectors DFrame
-setAs("ParquetDataFrame", "DFrame", function(from) .collapse_to_dframe(from))

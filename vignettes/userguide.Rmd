@@ -64,32 +64,14 @@ log1p(df$mpg)
 as.vector(df$mpg)
 ```
 
-# Collapsing to a `DFrame`
-
-The main goal of a `ParquetDataFrame` is to serve as a consistent representation of the data inside a Parquet file.
-However, this cannot be easily reconciled with many `DataFrame` operations that add or change data - 
-at least, not without mutating the Parquet data, which is outside the scope of the `ParquetDataFrame` class.
-To handle such operations, the `ParquetDataFrame` will collapse to a `DFrame` of `ParquetColumn`s:
+These transformed columns can be assigned back to `ParquetDataFrame` objects.
 
 ```{r}
 copy <- df
-copy$some_random_thing <- runif(nrow(df))
-class(copy)
-colnames(copy)
-```
-
-This preserves the memory efficiency of file-backed data while supporting all `DataFrame` operations.
-For example, we can easily subset and mutate the various columns, which manifest as delayed operations inside each column.
-
-```{r}
 copy$wt <- copy$wt * 1000
 top.hits <- head(copy)
 top.hits
 ```
-
-The fallback to `DFrame` ensures that a `ParquetDataFrame` is interoperable with other Bioconductor data structures that need to perform arbitrary `DataFrame` operations.
-Of course, when a collapse occurs, we lose all guarantees that the in-memory representation is compatible with the underlying Parquet data.
-This may preclude further optimizations in cases where we consider directly operating on the Parquet data on disk.
 
 # Retrieving the Arrow Dataset
 
