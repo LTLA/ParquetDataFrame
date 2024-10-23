@@ -4,8 +4,9 @@
 \alias{ParquetFactTable}
 \alias{ParquetFactTable-class}
 \alias{[,ParquetFactTable,ANY,ANY,ANY-method}
-\alias{all.equal,ParquetFactTable,ParquetFactTable-method}
+\alias{all.equal.ParquetFactTable}
 \alias{as.data.frame,ParquetFactTable-method}
+\alias{bindCOLS,ParquetFactTable-method}
 \alias{colnames,ParquetFactTable-method}
 \alias{colnames<-,ParquetFactTable-method}
 \alias{ncol,ParquetFactTable-method}

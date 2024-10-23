@@ -30,9 +30,25 @@ test_that("fact columns of a ParquetFactTable can be cast to a different type", 
 test_that("ParquetFactTable column names can be modified", {
     tbl <- ParquetFactTable(mtcars_path, key = "model", fact = colnames(mtcars))
     replacements <- sprintf("COL%d", seq_len(ncol(tbl)))
-    tbl <- ParquetDataFrame:::.replaceColnames.ParquetFactTable(tbl, replacements)
-    #colnames(tbl) <- replacements
+    colnames(tbl) <- replacements
     expected <- mtcars_df 
     colnames(expected)[-1L] <- replacements
     checkParquetFactTable(tbl, expected)
+})
+
+test_that("ParquetFactTable can be bound across columns", {
+    tbl <- ParquetFactTable(mtcars_path, key = "model", fact = colnames(mtcars))
+
+    # Same path, we get another PDF.
+    checkParquetFactTable(cbind(tbl, foo=tbl[,"carb"]), cbind(mtcars_df, foo=mtcars[["carb"]]))
+
+    # Duplicate names causes unique renaming.
+    expected <- cbind(mtcars_df, mtcars)
+    colnames(expected) <- make.unique(colnames(expected), sep="_")
+    checkParquetFactTable(cbind(tbl, tbl), expected)
+
+    # Duplicate names causes unique renaming.
+    expected <- cbind(mtcars_df, carb=mtcars[,"carb"])
+    colnames(expected) <- make.unique(colnames(expected), sep="_")
+    checkParquetFactTable(cbind(tbl, carb=tbl[,"carb"]), expected)
 })

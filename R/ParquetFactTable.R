@@ -34,8 +34,9 @@
 #' @aliases
 #' ParquetFactTable-class
 #' [,ParquetFactTable,ANY,ANY,ANY-method
-#' all.equal,ParquetFactTable,ParquetFactTable-method
+#' all.equal.ParquetFactTable
 #' as.data.frame,ParquetFactTable-method
+#' bindCOLS,ParquetFactTable-method
 #' colnames,ParquetFactTable-method
 #' colnames<-,ParquetFactTable-method
 #' ncol,ParquetFactTable-method
@@ -105,11 +106,10 @@ setMethod("rownames", "ParquetFactTable", function(x, do.NULL = TRUE, prefix = "
 setMethod("colnames", "ParquetFactTable", function(x, do.NULL = TRUE, prefix = "col") names(x@fact))
 
 #' @export
+#' @importFrom BiocGenerics colnames<-
 #' @importFrom dplyr rename
 #' @importFrom stats setNames
-setReplaceMethod("colnames", "ParquetFactTable", .replaceColnames.ParquetFactTable)
-
-.replaceColnames.ParquetFactTable <- function(x, value) {
+setReplaceMethod("colnames", "ParquetFactTable", function(x, value) {
     query <- x@query
     fact <- x@fact
     orig <- names(fact)
@@ -117,7 +117,7 @@ setReplaceMethod("colnames", "ParquetFactTable", .replaceColnames.ParquetFactTab
     value <- setNames(value, orig)
     names(fact) <- value[names(fact)]
     initialize(x, query = query, fact = fact)
-}
+})
 
 #' @export
 setMethod("[", "ParquetFactTable", function(x, i, j, ..., drop = TRUE) {
@@ -147,20 +147,54 @@ setMethod("[", "ParquetFactTable", function(x, i, j, ..., drop = TRUE) {
 })
 
 #' @export
-setMethod("all.equal", c(target = "ParquetFactTable", current = "ParquetFactTable"),
-function(target, current, check.selected_columns = FALSE, ...) {
+#' @importFrom S4Vectors bindCOLS
+setMethod("bindCOLS", "ParquetFactTable",
+function(x, objects = list(), use.names = TRUE, ignore.mcols = FALSE, check = TRUE) {
+    query <- x@query
+    selected_columns <- query$selected_columns
+    fact <- x@fact
+
+    for (i in seq_along(objects)) {
+        obj <- objects[[i]]
+        if (!is(obj, "ParquetFactTable")) {
+            stop("all objects must be of class 'ParquetFactTable'")
+        }
+        if (!isTRUE(all.equal(x, obj))) {
+            stop("all objects must share a compatible 'ParquetFactTable' structure")
+        }
+        newname <- names(objects)[i]
+        if (!is.null(newname) && nzchar(newname)) {
+            if (ncol(obj) > 1L) {
+                colnames(obj) <- paste(newname, colnames(obj), sep = "_")
+            }
+            colnames(obj) <- newname
+        }
+        selected_columns <- c(selected_columns, obj@query$selected_columns[colnames(obj)])
+        fact <- c(fact, obj@fact)
+    }
+    names(selected_columns) <- make.unique(names(selected_columns), sep = "_")
+    names(fact) <- make.unique(names(fact), sep = "_")
+    query$selected_columns <- selected_columns
+    initialize(x, query = query, fact = fact)
+})
+
+#' @exportS3Method base::all.equal
+all.equal.ParquetFactTable <- function(target, current, check.fact = FALSE, ...) {
+    if (!is(current, "ParquetFactTable")) {
+        return("current is not a ParquetFactTable")
+    }
     if (!identical(target@query$.data, current@query$.data)) {
         return("query data mismatch")
     }
-    if (check.selected_columns) {
+    if (check.fact) {
         i <- setdiff(names(unclass(target@query)), ".data")
     } else {
         i <- setdiff(names(unclass(target@query)), c(".data", "selected_columns"))
     }
-    target <- c(unclass(target@query)[i], list(key = as.list(target@key), fact = list(target@fact)))
-    current <- c(unclass(current@query)[i], list(key = as.list(current@key), fact = list(current@fact)))
+    target <- c(unclass(target@query)[i], list(key = as.list(target@key), fact = list(target@fact)[check.fact]))
+    current <- c(unclass(current@query)[i], list(key = as.list(current@key), fact = list(current@fact)[check.fact]))
     callGeneric(target, current, ...)
-})
+}
 
 #' @export
 #' @importFrom BiocGenerics as.data.frame
