@@ -104,6 +104,11 @@ setMethod("rownames", "ParquetFactTable", function(x, do.NULL = TRUE, prefix = "
 #' @importFrom BiocGenerics colnames
 setMethod("colnames", "ParquetFactTable", function(x, do.NULL = TRUE, prefix = "col") names(x@fact))
 
+#' @export
+#' @importFrom dplyr rename
+#' @importFrom stats setNames
+setReplaceMethod("colnames", "ParquetFactTable", .replaceColnames.ParquetFactTable)
+
 .replaceColnames.ParquetFactTable <- function(x, value) {
     query <- x@query
     fact <- x@fact
@@ -113,19 +118,6 @@ setMethod("colnames", "ParquetFactTable", function(x, do.NULL = TRUE, prefix = "
     names(fact) <- value[names(fact)]
     initialize(x, query = query, fact = fact)
 }
-#' @export
-#' @importFrom dplyr rename
-#' @importFrom stats setNames
-setReplaceMethod("colnames", "ParquetFactTable", .replaceColnames.ParquetFactTable)
-#function(x, value) {
-#    query <- x@query
-#    fact <- x@fact
-#    orig <- names(fact)
-#    query <- rename(query, !!!setNames(orig, value))
-#    value <- setNames(value, orig)
-#    names(fact) <- value[names(fact)]
-#    initialize(x, query = query, fact = fact)
-#})
 
 #' @export
 setMethod("[", "ParquetFactTable", function(x, i, j, ..., drop = TRUE) {
