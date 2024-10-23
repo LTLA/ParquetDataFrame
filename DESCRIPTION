@@ -43,4 +43,6 @@ Collate:
     'ParquetArray.R'
     'ParquetColumn.R'
     'ParquetDataFrame.R'
+    'keynames.R'
+    'ParquetFactTable.R'
     'ParquetMatrix.R'

@@ -15,7 +15,7 @@ test_that("renaming columns creates a new ParquetDataFrame", {
     df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
     expected <- mtcars
 
-    replacements <- sprintf("COL%i", seq_len(ncol(df)))
+    replacements <- sprintf("COL%d", seq_len(ncol(df)))
     colnames(df) <- replacements
     colnames(expected) <- replacements
     checkParquetDataFrame(df, expected)
@@ -25,7 +25,7 @@ test_that("adding rownames creates a new ParquetDataFrame", {
     df <- ParquetDataFrame(mtcars_path, key = "model")
     expected <- mtcars
 
-    replacements <- sprintf("ROW%i", seq_len(nrow(df)))
+    replacements <- sprintf("ROW%d", seq_len(nrow(df)))
     rownames(df) <- replacements
     rownames(expected) <- setNames(names(df@key[[1L]]), df@key[[1L]])[rownames(expected)]
     checkParquetDataFrame(df, expected)
@@ -33,7 +33,7 @@ test_that("adding rownames creates a new ParquetDataFrame", {
     df <- ParquetDataFrame(mtcars_path, key = list(model = rownames(mtcars)))
     expected <- mtcars
 
-    replacements <- sprintf("ROW%i", seq_len(nrow(df)))
+    replacements <- sprintf("ROW%d", seq_len(nrow(df)))
     rownames(df) <- replacements
     rownames(expected) <- replacements
     checkParquetDataFrame(df, expected)

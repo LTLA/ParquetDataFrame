@@ -1,8 +1,8 @@
 #' Arrow Query Accessor
 #'
-#' Get or set the arrow query value contained in an object.
+#' Get the arrow query value contained in an object.
 #'
-#' @param x An object to get or set the arrow query value.
+#' @param x An object to get the arrow query value.
 #' @param ... Additional arguments, for use in specific methods.
 #'
 #' @author Patrick Aboyoun

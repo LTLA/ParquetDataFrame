@@ -12,12 +12,12 @@
 arrow_query(x, ...)
 }
 \arguments{
-\item{x}{An object to get or set the arrow query value.}
+\item{x}{An object to get the arrow query value.}
 
 \item{...}{Additional arguments, for use in specific methods.}
 }
 \description{
-Get or set the arrow query value contained in an object.
+Get the arrow query value contained in an object.
 }
 \examples{
 arrow_query
