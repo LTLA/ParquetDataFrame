@@ -15,6 +15,33 @@ test_that("basic methods work as expected for a ParquetFactTable", {
     checkParquetFactTable(tbl, titanic_df)
 })
 
+test_that("key names can be modified for a ParquetFactTable", {
+    tbl <- ParquetFactTable(esoph_path, key = c("agegp", "alcgp", "tobgp"), fact = c("ncases", "ncontrols"))
+    expect_identical(nkey(tbl), 3L)
+    expect_identical(keynames(tbl), c("agegp", "alcgp", "tobgp"))
+    expect_identical(keydimnames(tbl), lapply(esoph[, c("agegp", "alcgp", "tobgp")], levels))
+
+    copy <- tbl
+    replacement <- vector("list", 3L)
+    for (i in seq_along(replacement)) {
+        replacement[[i]] <- head(letters, nlevels(esoph[[i]]))
+    }
+    keydimnames(copy) <- replacement
+    expect_identical(keydimnames(copy), setNames(replacement, c("agegp", "alcgp", "tobgp")))
+
+    copy <- tbl
+    names(replacement) <- c("agegp", "alcgp", "tobgp")
+    keydimnames(copy) <- replacement
+    expect_identical(keydimnames(copy), replacement)
+
+    copy <- tbl
+    replacement <- list(agegp = levels(esoph$agegp),
+                        alcgp = head(LETTERS, nlevels(esoph$alcgp)),
+                        tobgp = head(levels(esoph$tobgp)))
+    keydimnames(copy) <- replacement["alcgp"]
+    expect_identical(keydimnames(copy), replacement)
+})
+
 test_that("fact columns of a ParquetFactTable can be cast to a different type", {
     tbl <- ParquetFactTable(esoph_path, key = c("agegp", "alcgp", "tobgp"), fact = c("ncases", "ncontrols"))
     expect_is(as.data.frame(tbl)[["ncases"]], "numeric")

@@ -2,24 +2,37 @@
 % Please edit documentation in R/keynames.R
 \name{keynames}
 \alias{keynames}
+\alias{keydimnames}
+\alias{keydimnames<-}
 \alias{nkey}
 \alias{keynames,ParquetFactTable-method}
+\alias{keydimnames,ParquetFactTable-method}
+\alias{keydimnames<-,ParquetFactTable-method}
 \alias{nkey,ParquetFactTable-method}
 \title{Key Names and Key Count}
 \usage{
-keynames(x, ...)
+keynames(x)
+
+keydimnames(x, value)
+
+keydimnames(x) <- value
+
+nkey(x)
 }
 \arguments{
-\item{x}{An object to get the key names or key count.}
+\item{x}{An object to get the key related information.}
 
-\item{...}{Additional arguments, for use in specific methods.}
+\item{value}{A character vector of key dimension names.}
 }
 \description{
-Get the key names or key count of an object.
+Get the key names, key dimension names, or key count of an object.
 }
 \examples{
 keynames
 showMethods("keynames")
+
+keydimnames
+showMethods("keydimnames")
 
 nkey
 showMethods("nkey")

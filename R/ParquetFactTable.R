@@ -103,7 +103,28 @@ setMethod("nrow", "ParquetFactTable", function(x) prod(lengths(x@key, use.names 
 setMethod("ncol", "ParquetFactTable", function(x) length(x@fact))
 
 #' @export
-setMethod("keynames", "ParquetFactTable", function(x, ...) names(x@key))
+setMethod("keynames", "ParquetFactTable", function(x) names(x@key))
+
+#' @export
+setMethod("keydimnames", "ParquetFactTable", function(x) lapply(x@key, names))
+
+#' @export
+setReplaceMethod("keydimnames", "ParquetFactTable", function(x, value) {
+    if (!is.list(value) || is(value, "CharacterList")) {
+        stop("'value' must be a list of character vectors")
+    }
+    key <- x@key
+    if (is.null(names(value))) {
+        if (length(value) != length(key)) {
+            stop("if 'value' is unnamed, then it must match length of 'key'")
+        }
+        names(value) <- names(key)
+    }
+    for (i in names(value)) {
+        names(key[[i]]) <- value[[i]]
+    }
+    initialize(x, key = key)
+})
 
 #' @export
 #' @importFrom BiocGenerics rownames
