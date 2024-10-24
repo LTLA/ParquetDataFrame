@@ -42,6 +42,10 @@
 #' ncol,ParquetFactTable-method
 #' nrow,ParquetFactTable-method
 #' rownames,ParquetFactTable-method
+#' Ops,ParquetFactTable,ParquetFactTable-method
+#' Ops,ParquetFactTable,atomic-method
+#' Ops,atomic,ParquetFactTable-method
+#' Math,ParquetFactTable-method
 #'
 #' @include arrow_query.R
 #' @include acquireDataset.R
@@ -135,7 +139,9 @@ setMethod("[", "ParquetFactTable", function(x, i, j, ..., drop = TRUE) {
         }
         for (k in intersect(names(key), names(i))) {
             sub <- i[[k]]
-            if (is.atomic(sub)) {
+            if (is.character(sub)) {
+                key[[k]] <- sub
+            } else if (is.atomic(sub)) {
                 key[[k]] <- key[[k]][sub]
             } else {
                 stop("invalid value for '", k, "' in 'i'")
@@ -195,6 +201,87 @@ all.equal.ParquetFactTable <- function(target, current, check.fact = FALSE, ...)
     current <- c(unclass(current@query)[i], list(key = as.list(current@key), fact = list(current@fact)[check.fact]))
     callGeneric(target, current, ...)
 }
+
+
+#' @importFrom dplyr mutate select
+#' @importFrom stats setNames
+.Ops.ParquetFactTable <- function(.Generic, query, key, fin1, fin2, fout) {
+    cols <- setNames(Map(function(x, y) call(.Generic, x, y), fin1, fin2), fout)
+    query <- do.call(mutate, c(list(query), cols))
+    query <- select(query, c(names(key), fout))
+    fact <- setNames(rep.int(NA_character_, length(cols)), fout)
+    for (i in seq_along(fout)) {
+        fact[i] <- .getColumnType(select(query, as.name(fout[i])))
+    }
+    new("ParquetFactTable", query = query, key = key, fact = fact)
+}
+
+#' @export
+setMethod("Ops", c(e1 = "ParquetFactTable", e2 = "ParquetFactTable"), function(e1, e2) {
+    if (!isTRUE(all.equal(e1, e2)) || ((ncol(e1) > 1L) && (ncol(e2) > 1L) && (ncol(e1) != ncol(e2)))) {
+        stop("can only perform arithmetic operations with compatible objects")
+    }
+    comb <- cbind(e1, e2)
+    fin1 <- lapply(head(colnames(comb), ncol(e1)), as.name)
+    fin2 <- lapply(tail(colnames(comb), ncol(e2)), as.name)
+    if (ncol(e1) >= ncol(e2)) {
+        fout <- colnames(e1)
+    } else {
+        fout <- colnames(e2)
+    }
+    .Ops.ParquetFactTable(.Generic, query = comb@query, key = comb@key, fin1 = fin1, fin2 = fin2, fout = fout)
+})
+
+#' @export
+setMethod("Ops", c(e1 = "ParquetFactTable", e2 = "atomic"), function(e1, e2) {
+    if (length(e2) != 1L) {
+        stop("can only perform binary operations with a scalar value")
+    }
+    fin1 <- lapply(names(e1@fact), as.name)
+    .Ops.ParquetFactTable(.Generic, query = e1@query, key = e1@key, fin1 = fin1, fin2 = e2, fout = colnames(e1))
+})
+
+#' @export
+setMethod("Ops", c(e1 = "atomic", e2 = "ParquetFactTable"), function(e1, e2) {
+    if (length(e1) != 1L) {
+        stop("can only perform binary operations with a scalar value")
+    }
+    fin2 <- lapply(names(e2@fact), as.name)
+    .Ops.ParquetFactTable(.Generic, query = e2@query, key = e2@key, fin1 = e1, fin2 = fin2, fout = colnames(e2))
+})
+
+#' @export
+#' @importFrom dplyr mutate select
+setMethod("Math", "ParquetFactTable", function(x) {
+    query <- x@query
+    fact <- x@fact
+    cols <-
+      switch(.Generic,
+             abs =,
+             sign =,
+             sqrt =,
+             ceiling =,
+             floor =,
+             trunc =,
+             log =,
+             log10 =,
+             log2 =,
+             log1p =,
+             acos =,
+             asin =,
+             exp =,
+             cos =,
+             sin =,
+             tan = {
+                setNames(lapply(colnames(x), function(y) call(.Generic, as.name(y))), colnames(x))
+             },
+             stop("unsupported Math operator: ", .Generic))
+    query <- do.call(mutate, c(list(query), cols))
+    for (i in names(fact)) {
+        fact[i] <- .getColumnType(select(query, as.name(i)))
+    }
+    initialize(x, query = query, fact = fact)
+})
 
 #' @export
 #' @importFrom BiocGenerics as.data.frame
