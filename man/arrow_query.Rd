@@ -6,6 +6,7 @@
 \alias{arrow_query,ParquetArraySeed-method}
 \alias{arrow_query,ParquetColumn-method}
 \alias{arrow_query,ParquetDataFrame-method}
+\alias{arrow_query,ParquetFactTable-method}
 \alias{arrow_query,ParquetMatrix-method}
 \title{Arrow Query Accessor}
 \usage{

@@ -94,6 +94,9 @@ setValidity2("ParquetFactTable", function(x) {
 })
 
 #' @export
+setMethod("arrow_query", "ParquetFactTable", function(x) x@query)
+
+#' @export
 setMethod("nkey", "ParquetFactTable", function(x) length(x@key))
 
 #' @export
