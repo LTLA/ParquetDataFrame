@@ -2,14 +2,33 @@
 # library(testthat); library(ParquetFactTable); source("setup.R"); source("test-ParquetFactTable.R")
 
 test_that("basic methods work as expected for a ParquetFactTable", {
+    # esoph dataset
+    tbl <- ParquetFactTable(esoph_path, key = c("agegp", "alcgp", "tobgp"))
+    checkParquetFactTable(tbl, esoph)
+
     tbl <- ParquetFactTable(esoph_path, key = c("agegp", "alcgp", "tobgp"), fact = c("ncases", "ncontrols"))
     checkParquetFactTable(tbl, esoph)
+
+    # mtcars dataset
+    tbl <- ParquetFactTable(mtcars_path, key = "model")
+    checkParquetFactTable(tbl, mtcars_df)
+
+    tbl <- ParquetFactTable(mtcars_path, key = "model", fact = head(colnames(mtcars)))
+    checkParquetFactTable(tbl, mtcars_df[, 1:7])
 
     tbl <- ParquetFactTable(mtcars_path, key = "model", fact = colnames(mtcars))
     checkParquetFactTable(tbl, mtcars_df)
 
+    # state dataset
+    tbl <- ParquetFactTable(state_path, key = c("region", "division", "rowname", "colname"))
+    checkParquetFactTable(tbl, state_df)
+
     tbl <- ParquetFactTable(state_path, key = c("region", "division", "rowname", "colname"), fact = "value")
     checkParquetFactTable(tbl, state_df)
+
+    # titanic dataset
+    tbl <- ParquetFactTable(titanic_path, key = c("Class", "Sex", "Age", "Survived"))
+    checkParquetFactTable(tbl, titanic_df)
 
     tbl <- ParquetFactTable(titanic_path, key = c("Class", "Sex", "Age", "Survived"), fact = "fate")
     checkParquetFactTable(tbl, titanic_df)

@@ -18,7 +18,7 @@
 \alias{Math,ParquetFactTable-method}
 \title{ParquetFactTable objects}
 \usage{
-ParquetFactTable(query, key, fact, ...)
+ParquetFactTable(query, key, fact = setdiff(names(query), names(key)), ...)
 }
 \arguments{
 \item{query}{Either a string containing the path to the Parquet data,

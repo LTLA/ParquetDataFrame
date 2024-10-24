@@ -340,7 +340,7 @@ setMethod("as.data.frame", "ParquetFactTable", function(x, row.names = NULL, opt
 #' @export
 #' @importFrom dplyr distinct everything mutate pull select
 #' @rdname ParquetFactTable
-ParquetFactTable <- function(query, key, fact, ...) {
+ParquetFactTable <- function(query, key, fact = setdiff(names(query), names(key)), ...) {
     if (!inherits(query, "arrow_dplyr_query")) {
         query <- select(acquireDataset(query, ...), everything())
     }
