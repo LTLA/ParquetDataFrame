@@ -4,7 +4,7 @@
 #' ParquetFactTable is a low-level helper class for representing a
 #' pointer to a Parquet fact table.
 #'
-#' @param data Either a string containing the path to the Parquet data,
+#' @param query Either a string containing the path to the Parquet data,
 #' or an \code{arrow_dplyr_query} object.
 #' @param key Either a character vector or a named list of character vectors
 #' containing the names of the columns in the Parquet data that specify
@@ -340,11 +340,9 @@ setMethod("as.data.frame", "ParquetFactTable", function(x, row.names = NULL, opt
 #' @export
 #' @importFrom dplyr distinct everything mutate pull select
 #' @rdname ParquetFactTable
-ParquetFactTable <- function(data, key, fact, ...) {
-    if (inherits(data, "arrow_dplyr_query")) {
-        query <- data
-    } else {
-        query <- select(acquireDataset(data, ...), everything())
+ParquetFactTable <- function(query, key, fact, ...) {
+    if (!inherits(query, "arrow_dplyr_query")) {
+        query <- select(acquireDataset(query, ...), everything())
     }
 
     if (is.character(key)) {

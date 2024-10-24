@@ -18,10 +18,10 @@
 \alias{Math,ParquetFactTable-method}
 \title{ParquetFactTable objects}
 \usage{
-ParquetFactTable(data, key, fact, ...)
+ParquetFactTable(query, key, fact, ...)
 }
 \arguments{
-\item{data}{Either a string containing the path to the Parquet data,
+\item{query}{Either a string containing the path to the Parquet data,
 or an \code{arrow_dplyr_query} object.}
 
 \item{key}{Either a character vector or a named list of character vectors
