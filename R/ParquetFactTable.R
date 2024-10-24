@@ -71,6 +71,12 @@ setValidity2("ParquetFactTable", function(x) {
     if (!all(names(x@key) %in% names(x@query))) {
         msg <- c(msg, "all names in 'key' slot must match columns in 'query'")
     }
+    for (i in seq_along(x@key)) {
+        if (is.null(names(x@key[[i]]))) {
+            msg <- c(msg, "all elements in 'key' slot must be named character vectors")
+            break
+        }
+    }
     if (is.null(names(x@fact))) {
         msg <- c(msg, "'fact' slot must be a named character vector")
     }
@@ -139,9 +145,7 @@ setMethod("[", "ParquetFactTable", function(x, i, j, ..., drop = TRUE) {
         }
         for (k in intersect(names(key), names(i))) {
             sub <- i[[k]]
-            if (is.character(sub)) {
-                key[[k]] <- sub
-            } else if (is.atomic(sub)) {
+            if (is.atomic(sub)) {
                 key[[k]] <- key[[k]][sub]
             } else {
                 stop("invalid value for '", k, "' in 'i'")
@@ -330,6 +334,12 @@ ParquetFactTable <- function(data, key, fact, ...) {
     }
     if (!is(key, "CharacterList") || is.null(names(key))) {
         stop("'key' must be a character vector or a named list of character vectors")
+    }
+    for (i in seq_along(key)) {
+        nms <- names(key[[i]])
+        if (is.null(nms) || anyNA(nms) || any(!nzchar(nms))) {
+            names(key[[i]]) <- key[[i]]
+        }
     }
 
     if (!is.character(fact)) {
